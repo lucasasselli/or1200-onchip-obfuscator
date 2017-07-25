@@ -1,0 +1,70 @@
+#define DEBUG 0
+#define DBGFINE 0
+#define N 20
+
+#include "../../support/support.h"
+
+void buserr_except(){}
+void dpf_except(){}
+void ipf_except(){}
+void lpint_except(){}
+void align_except(){}
+void illegal_except(){}
+void hpint_except(){}
+void dtlbmiss_except(){}
+void itlbmiss_except(){}
+void range_except(){}
+void syscall_except(){}
+void res1_except(){}
+void trap_except(){}
+void res2_except(){}
+
+extern long test_gold(long a, long b);
+extern long test_sub(long a, long b);
+
+// Xorshift
+static unsigned long x=123456789, y=362436069, z=521288629;
+unsigned long xorshf96(void) {
+    unsigned long t;
+    x ^= x << 16;
+    x ^= x >> 5;
+    x ^= x << 1;
+
+    t = x;
+    x = y;
+    y = z;
+    z = t ^ x ^ y;
+
+    return z;
+}
+
+int main()
+{   
+    int i=0;
+    long res1, res2;
+    long in1, in2;
+
+#if DEBUG
+    report(0xcafecafe); 
+#endif
+
+    // Execute test
+    for(i=0; i<N; i++){
+        in1 = xorshf96();
+        in2 = xorshf96();
+        res1 = test_gold(in1, in2);
+        res2 = test_sub(in1, in2);
+        if(res1 != res2){
+            // Test failed
+            report(i);
+            report(in1);
+            report(in2);
+            report(res1);
+            report(res2);
+            return 0;
+        }
+    }
+
+    // Test successful
+    return 1;
+}

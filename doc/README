@@ -1,0 +1,86 @@
+   __ ___      __  ____  ___  ______  ______________ __________  ___ 
+  / // / | /| / / / __ \/ _ )/ __/ / / / __/ ___/ _ /_  __/ __ \/ _ \
+ / _  /| |/ |/ / / /_/ / _  / _// /_/ /\ \/ /__/ __ |/ / / /_/ / , _/
+/_//_/ |__/|__/  \____/____/_/  \____/___/\___/_/ |_/_/  \____/_/|_| 
+
+Author: Luca Sasselli                                                              
+Rev: 1
+
+NOTES:
+- Estimated LUT size (16+3)*2*3*100 bit
+- Reserved bit in instruction are assumed 0
+
+TODO:
+- Type F and FI?
+
+000     Type N      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+001     Type A      OOOOOODDDDDAAAAABBBBB_XXXX__YYYY
+010     Type I      OOOOOODDDDDAAAAAIIIIIIIIIIIIIIII
+011     Type B      OOOOOONNNNNNNNNNNNNNNNNNNNNNNNNN
+100     Type F      OOOOOOFFFFFAAAAABBBBB___________
+100     Type FI     OOOOOOFFFFFAAAAAIIIIIIIIIIIIIIII
+101     Type S      Non standanrd op. code
+110     Type M      OOOOOOIIIIIAAAAABBBBBIIIIIIIIIII
+
+## Type A ##
+
++---------+--------+---+---+---+-------+-------+
+| 15 - 12 | 11 - 8 | 7 | 6 | 5 | 4 - 3 | 2 - 1 |
++---------+--------+---+---+---+-------+-------+
+| OPC1    | OPC2   | D | A | B | Res   | RFOP  |
++---------+--------+---+---+---+-------+-------+
+
+- OP1:
+	Arith. operation 2nd opcode
+
+- OP1:
+	Arith. operation 3rd opcode
+	
+- D:
+	1: r0
+	0: rD
+
+- A:
+	1: r0
+	0: rA
+	
+- B:
+	1: r0
+	0: rB
+	
+- RF_OP:
+	00: A  B
+	01: A  B'
+	10: A' B'
+	11: 0  B
+	
+## Type F ##
+
+## Type B ##
+	
+
+## Type I/M ##
+
++---------+---+---+---+-------+-------+
+| 15 - 10 | 9 | 8 | 7 | 6 - 2 | 1 - 0 |
++---------+---+---+---+-------+-------+
+| OPC     | O | S | D | I     | RFOP  |
++---------+---+---+---+-------+-------+
+
+- OPC:
+	Instruction opcode
+
+- O:
+        1: New immediate
+        0: Original immediate
+
+- S:
+        1: Sign extension
+        0: Zero extension
+	
+- D:
+	1: r0
+	0: rD
+
+- I:
+        Immediate (ignored if O=0)

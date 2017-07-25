@@ -1,0 +1,98 @@
+l.add rD,rA,rB
+l.addc rD,rA,rB
+l.addi rD,rA,I
+l.addic rD,rA,I
+l.and rD,rA,rB
+l.andi rD,rA,K
+l.bf N
+l.bnf N
+l.cmov rD,rA,rB
+l.csync
+l.cust1
+l.cust2
+l.cust3
+l.cust4
+l.cust5 rD,rA,rB,L,K
+l.cust6
+l.cust7
+l.cust8
+l.div rD,rA,rB
+l.divu rD,rA,rB
+l.extbs rD,rA
+l.extbz rD,rA
+l.exths rD,rA
+l.exthz rD,rA
+l.extws rD,rA
+l.extwz rD,rA
+l.ff1 rD,rA,rB
+l.fl1 rD,rA,rB
+l.j N
+l.jal N
+l.jalr rB
+l.jr rB
+l.lbs rD,I(rA)
+l.lbz rD,I(rA)
+l.ld rD,I(rA)
+l.lhs rD,I(rA)
+l.lhz rD,I(rA)
+l.lws rD,I(rA)
+l.lwz rD,I(rA)
+l.mac rA,rB
+l.maci rA,I
+l.macrc rD
+l.macu rA,rB
+l.mfspr rD,rA,K
+l.movhi rD,K
+l.msb rA,rB
+l.msbu rA,rB
+l.msync
+l.mtspr rA,rB,K
+l.mul rD,rA,rB
+l.muld rA,rB
+l.muldu rA,rB
+l.muli rD,rA,I
+l.mulu rD,rA,rB
+l.nop K
+l.or rD,rA,rB
+l.ori rD,rA,K
+l.psync
+l.rfe
+l.ror rD,rA,rB
+l.rori rD,rA,L
+l.sb I(rA),rB
+l.sd I(rA),rB
+l.sfeq rA,rB
+l.sfeqi rA,I
+l.sfges rA,rB
+l.sfgesi rA,I
+l.sfgeu rA,rB
+l.sfgeui rA,I
+l.sfgts rA,rB
+l.sfgtsi rA,I
+l.sfgtu rA,rB
+l.sfgtui rA,I
+l.sfles rA,rB
+l.sflesi rA,I
+l.sfleu rA,rB
+l.sfleui rA,I
+l.sflts rA,rB
+l.sfltsi rA,I
+l.sfltu rA,rB
+l.sfltui rA,I
+l.sfne rA,rB
+l.sfnei rA,I
+l.sh I(rA),rB
+l.sll rD,rA,rB
+l.slli rD,rA,L
+l.sra rD,rA,rB
+l.srai rD,rA,L
+l.srl rD,rA,rB
+l.srli rD,rA,L
+l.sub rD,rA,rB
+l.sw I(rA),rB
+l.swa I(rA),rB
+l.sys K
+l.trap K
+l.xor rD,rA,rB
+l.xori rD,rA,I
+ 

@@ -1,0 +1,17 @@
+#include "../../support/spr_defs.h"
+
+  .section .data
+
+  .section .text
+  .global _test
+
+_test:
+        // Code payload
+        //||//
+
+        // Report result
+        l.nop NOP_REPORT_SR
+
+        // Return
+        l.jr r9 
+        l.nop   
