@@ -176,7 +176,7 @@ wire [15:0]                     sub_cmd  = lut_out[16:1];
 wire                            sub_last = lut_out[0];
 
 // Generate output fields using cmd
-wire [3:0]  f_out_OPC0 = sub_cmd[15:10];
+wire [5:0]  f_out_OPC0 = sub_cmd[15:10];
 wire [3:0]  f_out_OPC1 = sub_cmd[15:12];
 wire [3:0]  f_out_OPC2 = sub_cmd[11:8];
 wire [4:0]  f_out_D    = sub_cmd[7] ? 5'b00000 : f_in_D;
