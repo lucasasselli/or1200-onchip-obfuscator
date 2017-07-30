@@ -1,6 +1,6 @@
 #!/bin/bash
-TARGET_SYS=or1200-generic-hwo
-TARGET_SW=hello
+TARGET_SYS=or1200-obf-generic
+TARGET_SW=or1k-mibench
 
 # Compile target software
 make -C sw/$TARGET_SW
