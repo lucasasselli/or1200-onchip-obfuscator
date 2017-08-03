@@ -1,0 +1,204 @@
+Instruction,Substitution 1,Substitution 2,Substitution 3
+"l.add rD,rA,rB","l.addi r0,rA,0
+l.addc rD,r0,rB
+l.andi r0,r0,0","l.add rD,rA,rB
+l.andi r0,r0,0",
+"l.addc rD,rA,rB","l.addc rD,rA,rB
+l.and r0,r0,r0","l.addc rD,rA,rB
+l.movhi r0,0",
+"l.addi rD,rA,I","l.addc r0,r0,r0
+l.addic rD,rA,I
+l.movhi r0,0","l.xori r0,r0,I
+l.add rD,rA,r0
+l.movhi r0,0",
+"l.addic rD,rA,I","l.xori r0,r0,I
+l.addc rD,rA,r0
+l.andi r0,r0,0","l.addic rD,rA,I
+l.and r0,r0,r0",
+"l.and rD,rA,rB","l.xori r0,rA,-1
+l.xori rD,rB,-1
+l.or rD,rD,r0
+l.xori rD,rD,-1
+l.xor r0, r0, r0","l.and rD,rA,rB
+l.extbs r0,r0",
+"l.andi rD,rA,K","l.ori r0,r0,K
+l.xori r0,r0,-1
+l.xori rD,rB,-1
+l.or rD,rD,r0
+l.xori rD,rD,-1
+l.xor r0, r0, r0","l.ori r0,r0,I
+l.and rD,rA,r0
+l.xor r0,r0,r0",
+l.bf N,,,
+l.bnf N,,,
+"l.cmov rD,rA,rB",,,
+l.csync,,,
+l.cust1,,,
+l.cust2,,,
+l.cust3,,,
+l.cust4,,,
+"l.cust5 rD,rA,rB,L,K",,,
+l.cust6,,,
+l.cust7,,,
+l.cust8,,,
+"l.div rD,rA,rB",,,
+"l.divu rD,rA,rB",,,
+"l.extbs rD,rA","l.slli rD,rA,24
+l.srai rD,rD,24","l.extbs rD,rA
+l.andi r0,r0,0",
+"l.extbz rD,rA","l.slli rD,rA,24
+l.srli rD,rD,24","l.andi rD,rA,255",
+"l.exths rD,rA","l.slli rD,rA,16
+l.srai rD,rD,16","l.exths rD,rA
+l.andi r0,r0,0",
+"l.exthz rD,rA","l.andi rD,rA,65535","l.slli rD,rA,16
+l.srli rD,rD,16",
+"l.extws rD,rA","l.xori rD,rA,0","l.extws rD,rA",
+"l.extwz rD,rA","l.xori rD,rA,0","l.extws rD,rA",
+"l.ff1 rD,rA,rB","l.ff1 rD,rA,rB
+l.movhi r0,0","l.ff1 rD,rA,rB
+l.nop",
+"l.fl1 rD,rA,rB","l.ff1 rD,rA,rB
+l.movhi r0,0","l.ff1 rD,rA,rB
+l.nop",
+l.j N,,,
+l.jal N,,,
+l.jalr rB,,,
+l.jr rB,,,
+"l.lbs rD,I(rA)","l.lbz rD,I(rA)
+l.extbs rD,rD","l.lbz rD,I(rA)
+l.slli rD,rD,24
+l.srai rD,rD,24","l.lhz rD,I(rA)
+l.slli rD,rD,24
+l.srli rD,rD,24"
+"l.lbz rD,I(rA)","l.lbs rD,I(rA)
+l.extbz rD,rD","l.lbs rD,I(rA)
+l.andi rD,rD,255",
+"l.ld rD,I(rA)",,,
+"l.lhs rD,I(rA)","l.lhz rD,I(rA)
+l.exths rD,rD","l.lhz rD,I(rA)
+l.slli rD,rD,16
+l.srai rD,rD,16",
+"l.lhz rD,I(rA)","l.lhz rD,I(rA)
+l.exths rD,rD","l.lbs rD,I(rA)
+l.andi rD,rD,65535","l.lhz rD,I(rA)
+l.slli rD,rD,16
+l.srli rD,rD,16"
+"l.lws rD,I(rA)","l.lwz rD,I(rA)","l.lws rD,I(rA)
+l.and r0,r0,r0",
+"l.lwz rD,I(rA)","l.lws rD,I(rA)","l.lwz rD,I(rA)
+l.and r0,r0,r0",
+"l.mac rA,rB",,,
+"l.maci rA,I",,,
+l.macrc rD,,,
+"l.macu rA,rB",,,
+"l.mfspr rD,rA,K","l.mfspr rD,rA,K
+l.andi r0,r0,0","l.mfspr rD,rA,K
+l.and r0,r0,r0",
+"l.movhi rD,K","l.ori rD,r0,K
+l.slli rD,rD,16","l.ori r0,r0,1
+l.slli r0,r0,16
+l.muli rD,r0,K
+l.xor r0,r0,r0",
+"l.msb rA,rB",,,
+"l.msbu rA,rB",,,
+l.msync,,,
+"l.mtspr rA,rB,K","l.mtspr rD,rA,K
+l.andi r0,r0,0","l.mtspr rD,rA,K
+l.and r0,r0,r0",
+"l.mul rD,rA,rB",,,
+"l.muld rA,rB",,,
+"l.muldu rA,rB",,,
+"l.muli rD,rA,I",,,
+"l.mulu rD,rA,rB",,,
+l.nop K,,,
+"l.or rD,rA,rB","l.xori r0,rA,-1
+l.xori rD,rB,-1
+l.and rD,rD,r0
+l.xori rD,rD,-1
+l.xor r0, r0, r0","l.or rD,rA,rB
+l.andi r0,r0,0",
+"l.ori rD,rA,K","l.ori r0,r0,K
+l.xori r0,r0,-1
+l.xori rD,rB,-1
+l.and rD,rD,r0
+l.xori rD,rD,-1
+l.xor r0, r0, r0","l.xori r0,r0,K
+l.or rD,rA,r0
+l.andi r0,r0,0",
+l.psync,,,
+l.rfe,,,
+"l.ror rD,rA,rB",,,
+"l.rori rD,rA,L","l.xori r0,r0,L
+l.xori r0,r0,31
+l.addi r0,r0,33
+l.sll r0,rA,r0
+l.srli rD,rA,L
+l.or rD,rD,r0
+l.xor r0,r0,r0","l.rori rD,rA,L
+l.and r0,r0,r0",
+"l.sb I(rA),rB",,,
+"l.sd I(rA),rB",,,
+"l.sfeq rA,rB",,,
+"l.sfeqi rA,I",,,
+"l.sfges rA,rB",,,
+"l.sfgesi rA,I",,,
+"l.sfgeu rA,rB",,,
+"l.sfgeui rA,I",,,
+"l.sfgts rA,rB",,,
+"l.sfgtsi rA,I",,,
+"l.sfgtu rA,rB",,,
+"l.sfgtui rA,I",,,
+"l.sfles rA,rB",,,
+"l.sflesi rA,I",,,
+"l.sfleu rA,rB",,,
+"l.sfleui rA,I",,,
+"l.sflts rA,rB",,,
+"l.sfltsi rA,I",,,
+"l.sfltu rA,rB",,,
+"l.sfltui rA,I",,,
+"l.sfne rA,rB",,,
+"l.sfnei rA,I",,,
+"l.sh I(rA),rB","l.sh I(rA),rB
+l.andi r0,r0,0","l.sh I(rA),rB
+l.and r0,r0,r0",
+"l.sll rD,rA,rB","l.sll rD,rA,rB
+l.andi r0,r0,0","l.sll rD,rA,rB
+l.muli r0,r0,1",
+"l.slli rD,rA,L","l.xori r0,r0,I
+l.sll rD,rA,r0
+l.xor r0,r0,r0","l.slli rD,rA,L
+l.and r0,r0,r0",
+"l.sra rD,rA,rB","l.sra rD,rA,rB
+l.andi r0,r0,0","l.sra rD,rA,rB
+l.muli r0,r0,1",
+"l.srai rD,rA,L","l.xori r0,r0,I
+l.sra rD,rA,r0
+l.xor r0,r0,r0","l.srai rD,rA,L
+l.and r0,r0,r0",
+"l.srl rD,rA,rB","l.srl rD,rA,rB
+l.andi r0,r0,0","l.srl rD,rA,rB
+l.muli r0,r0,1",
+"l.srli rD,rA,L","l.xori r0,r0,I
+l.srl rD,rA,r0
+l.xor r0,r0,r0","l.srli rD,rA,L
+l.and r0,r0,r0",
+"l.sub rD,rA,rB","l.sub rD,rA,rB
+l.extws r0,r0","l.sub rD,rA,rB
+l.xori r0,r0,0",
+"l.sw I(rA),rB","l.sw I(rA),rB
+l.andi r0,r0,0","l.sw I(rA),rB
+l.andi r0,r0,0",
+"l.swa I(rA),rB",,,
+l.sys K,,,
+l.trap K,,,
+"l.xor rD,rA,rB","l.and r0,rA,rB
+l.xori r0, r0, -1
+l.or rD,rA,rB
+l.and rD,rD,r0
+l.xor r0, r0, r0","l.xor rD,rA,rB
+l.rori r0,r0,0",
+"l.xori rD,rA,I","l.ori r0,r0,I
+l.xor rD,rA,r0
+l.andi r0,r0,0","l.xori rD,rA,I
+l.sll r0,r0,r0",

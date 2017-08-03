@@ -1,0 +1,25 @@
+  .section .data
+
+  .section .text
+  .global test_sub
+
+test_sub:
+        // Generate complemented inputs
+        l.xori r27,r3,-1
+        l.xori r29,r4,-1
+
+        // Generate carry flag
+        l.andi r25,r3,1
+        l.addi r25,r25,-1
+
+        // Code payload
+        //||//
+
+        // Report result
+        // l.or r3,r0,r31
+        // l.nop NOP_REPORT
+
+        // Return
+        l.ori r11,r31,0
+        l.jr r9 
+        l.nop   

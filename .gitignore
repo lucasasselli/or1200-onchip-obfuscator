@@ -2,17 +2,14 @@
 # Project files/folders 
 ##################################################
 
-build/*
-
-transcript
-fusesoc.log
-
+*.log
 
 ##################################################
 # Software
 ##################################################
 
-# Assembly
+# Assembly/C
+*.o
 *.elf
 *.lst
 
@@ -21,3 +18,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Scripts
+scripts/sub-analyzer/test/*.c
+scripts/sub-analyzer/test/*.S
+
+##################################################
+# Fusesoc
+##################################################
+
+*transcript
+build/*
+scripts/sub-analyzer/build/*
