@@ -1,5 +1,4 @@
-# TODO:
-#     comp_op
+import logging
 
 # OPCODEs
 OR1200_OR32_J = "000000"
@@ -119,6 +118,7 @@ def parse(instr):
     for op in instr.split():
         if "l." in op:
             word = decode(op)
+            break
 
     if not word:
         raise ValueError
@@ -127,6 +127,7 @@ def parse(instr):
 
 
 def get_opcode(instr):
+
     if (instr == "l.add" or
             instr == "l.and" or
             instr == "l.cmov" or
@@ -174,7 +175,8 @@ def get_opcode(instr):
             instr == "l.cust6" or
             instr == "l.cust7" or
             instr == "l.cust8"):
-        raise ValueError
+        # TODO
+        pass
     elif instr == "l.j":
         return OR1200_OR32_J
     elif instr == "l.jal":
@@ -205,6 +207,8 @@ def get_opcode(instr):
         return OR1200_OR32_MACRC
     elif instr == "l.mfspr":
         return OR1200_OR32_MFSPR
+    elif instr == "l.mtspr":
+        return OR1200_OR32_MTSPR
     elif instr == "l.muli":
         return OR1200_OR32_MULI
     elif instr == "l.nop":
@@ -218,7 +222,8 @@ def get_opcode(instr):
     elif instr == "l.sb":
         return OR1200_OR32_SB
     elif instr == "l.sd":
-        raise ValueError
+        # TODO
+        pass
     elif (instr == "l.sfeq" or
             instr == "l.sfges" or
             instr == "l.sfgeu" or
@@ -245,20 +250,27 @@ def get_opcode(instr):
         return OR1200_OR32_SH
     elif (instr == "l.slli" or
             instr == "l.srai" or
-            instr == "l.srai"):
+            instr == "l.srli"):
         return OR1200_OR32_SH_ROTI
     elif instr == "l.sw":
         return OR1200_OR32_SW
     elif instr == "l.swa":
-        raise ValueError
+        # TODO
+        pass
     elif instr == "l.sys":
-        raise ValueError
+        # TODO
+        pass
     elif instr == "l.trap":
-        raise ValueError
+        # TODO
+        pass
     elif instr == "l.xori":
         return OR1200_OR32_XORI
     else:
-        raise ValueError
+        # TODO
+        pass
+
+    logging.warn("(Decoder) Unable to get opcode of %s", instr)
+    raise ValueError
 
 
 def decode(instr):
@@ -648,9 +660,11 @@ def get_alu_op(instr):
     if instr == "l.mul":
         return OR1200_ALUOP_MUL
     if instr == "l.muld":
-        raise ValueError
+        # TODO
+        pass
     if instr == "l.muldu":
-        raise ValueError
+        # TODO
+        pass
     if instr == "l.mulu":
         return OR1200_ALUOP_MULU
     if instr == "l.or":
@@ -666,4 +680,8 @@ def get_alu_op(instr):
     if instr == "l.xor":
         return OR1200_ALUOP_XOR
     else:
-        raise ValueError
+        # TODO
+        pass
+
+    logging.warn("(Decoder) Unable to get ALU opcode of %s", instr)
+    raise ValueError

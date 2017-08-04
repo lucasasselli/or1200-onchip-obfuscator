@@ -129,9 +129,13 @@ class LogFormatter(logging.Formatter):
         return formatted
 
 
-def init_logger(log_file):
+def init_logger(log_file, debug=0):
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+
+    if debug == 0:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.DEBUG)
 
     file_handler = logging.FileHandler(log_file, mode="w")
     file_handler.setFormatter(LogFormatter(monochrome=1))
