@@ -32,7 +32,7 @@
 //
 // Enable disassembly of instructions in execution state log
 //
-//`define OR1200_MONITOR_EXEC_LOG_DISASSEMBLY
+`define OR1200_MONITOR_EXEC_LOG_DISASSEMBLY
 
 //
 // Enable verbose report l.nops (to both general log file and stdout)

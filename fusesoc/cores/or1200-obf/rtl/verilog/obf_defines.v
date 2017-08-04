@@ -1,17 +1,15 @@
 // Main
 `define OBF_PPC_WIDTH 2
 `define OBF_CMD_WIDTH 16
-`define OBF_OOP_WIDTH 2
+`define OBF_KEY_WIDTH 2
 
 // LUT address fields
 `define OBF_IGU_WIDTH 7
-`define OBF_SUB_WIDTH 2
+`define OBF_SUB_WIDTH 2 // TODO Better addressing mode
 
 // LUT
-/* `define OBF_LUT_ADDR_WIDTH OBF_SUB_WIDTH+OBF_IGU_WIDTH */
-/* `define OBF_LUT_OUT_WIDTH OBF_INSN_TYPE_WIDTH + OBF_CMD_WIDTH */
 `define OBF_LUT_ADDR_WIDTH 9
-`define OBF_LUT_OUT_WIDTH  20
+`define OBF_LUT_OUT_WIDTH  16
 
 // Instruction types
 `define OBF_INSN_TYPE_WIDTH 3

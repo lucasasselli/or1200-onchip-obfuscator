@@ -11,6 +11,6 @@ _start:
     l.nop
     l.nop
     l.nop
-    l.and r3, r2, r1
+    l.add r3, r2, r1
     l.nop
     l.nop 0xc

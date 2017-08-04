@@ -341,8 +341,6 @@ wire				abort_mvspr;
 // Obfuscator
 //
 wire	[31:0]			io_insn;
-wire	[`OBF_OOP_WIDTH-1:0]	io_oop;
-wire	[`OBF_OOP_WIDTH-1:0]	id_oop;
 wire                            io_stall;
 wire	[31:0]			io_pc;
 
@@ -499,7 +497,6 @@ obf_top obf_top(
         .id_flushpipe(id_flushpipe),
         .io_stall(io_stall),
         .io_insn(io_insn),
-        .io_oop(io_oop),
         .io_pc(io_pc)
 );
 
@@ -567,9 +564,7 @@ or1200_ctrl or1200_ctrl(
 	.du_hwbkpt(du_hwbkpt),
 	.except_illegal(except_illegal),
 	.dc_no_writethrough(dc_no_writethrough),
-	.du_flush_pipe(du_flush_pipe),
-        .io_oop(io_oop),
-        .id_oop(id_oop)
+	.du_flush_pipe(du_flush_pipe)
 );
 
 //
@@ -619,8 +614,7 @@ or1200_operandmuxes or1200_operandmuxes(
 	.operand_a(operand_a),
 	.operand_b(operand_b),
 	.muxed_a(muxed_a),
-	.muxed_b(muxed_b),
-        .id_oop(id_oop)
+	.muxed_b(muxed_b)
 );
 
 //
