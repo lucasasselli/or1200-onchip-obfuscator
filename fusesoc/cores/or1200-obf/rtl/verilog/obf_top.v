@@ -193,7 +193,12 @@ wire [5:0]  f_out_OPC0 = sub_cmd[11:6];
 wire [3:0]  f_out_OPC1 = sub_cmd[11:8];
 wire [3:0]  f_out_OPC2 = sub_cmd[7:4];
 wire [4:0]  f_out_D    = sub_cmd[3] ? 5'b00000 : f_in_D;
-wire [4:0]  f_out_A    = sub_cmd[2] ? 5'b00000 : sub_cmd[1] ? f_in_D : f_in_A;
+
+wire [4:0]  f_out_A    = sub_cmd[2:1] == 2'b00 ? f_in_A:
+                         sub_cmd[2:1] == 2'b01 ? f_in_B:
+                         sub_cmd[2:1] == 2'b10 ? f_in_D:
+                         5'b00000;
+
 wire [4:0]  f_out_B    = sub_cmd[0] ? 5'b00000 : f_in_B;
 wire [15:0] f_out_I    = sub_cmd[5] ? lut_out_imm : sub_cmd[4]? 16'd0 : f_in_I;
 
@@ -212,7 +217,7 @@ end
 
 assign obf_bypass = !obf_en | (obf_init & (if_stall)); 
 assign obf_complete = sub_last;
-assign ppc_skip = (f_in_type == `OBF_INSN_TYPE_I || f_in_type == `OBF_INSN_TYPE_M) ? sub_cmd[7] : 1'b0;
+assign ppc_skip = (f_in_type == `OBF_INSN_TYPE_I || f_in_type == `OBF_INSN_TYPE_M) ? sub_cmd[5] : 1'b0;
 
 //////////////////////////////////////////////////
 // OUTPUTS

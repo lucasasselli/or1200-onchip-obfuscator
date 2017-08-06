@@ -10,6 +10,11 @@ RESULT_ERROR_UNKNOWN = 1
 RESULT_ERROR_DEPLOY = 2
 RESULT_ERROR_MISMATCH = 3
 
+# Paths
+PATH_TEMPLATES = "core/templates/"
+PATH_TEST = "core/test/"
+PATH_SHELL = "core/shell/"
+
 
 def parse_result_code(code):
 
@@ -58,7 +63,7 @@ class Tester:
         return code
 
     def __read_sim_result(self):
-        with open('test/simulation.log') as file:
+        with open(PATH_TEST+"simulation.log") as file:
             filedata = file.read()
 
         # Get result
@@ -80,7 +85,7 @@ class Tester:
     def run_result_test(self):
 
         # Clean test environment
-        self.__run_command("./shell/test_clean.sh")
+        self.__run_command("./"+PATH_SHELL+"/test_clean.sh")
 
         # If the instruction has no destiniation register, skip it
         if "rD" not in self.sub_obj.insn_sub:
@@ -88,20 +93,20 @@ class Tester:
             return RESULT_SKIP
 
         # Generate main
-        self.__run_command("cp templates/reg_result_main_c test/main.c")
+        self.__run_command("cp "+PATH_TEMPLATES+"reg_result_main_c "+PATH_TEST+"/main.c")
 
         # Generate reference ASM
         fitted_ref = self.sub_obj.insn_ref
         fitted_ref = self.__set_operands(fitted_ref, self.operand_cues, self.operand_subs)
-        self.__generate_from_template("templates/reg_result_test_ref_asm", fitted_ref, "test/test_ref.S")
+        self.__generate_from_template(PATH_TEMPLATES+"reg_result_test_ref_asm", fitted_ref, PATH_TEST+"/test_ref.S")
 
         # Generate subitution ASM
         fitted_sub = self.sub_obj.insn_sub
         fitted_sub = self.__set_operands(fitted_sub, self.operand_cues, self.operand_subs)
-        self.__generate_from_template("templates/reg_result_test_sub_asm", fitted_sub, "test/test_sub.S")
+        self.__generate_from_template(PATH_TEMPLATES+"reg_result_test_sub_asm", fitted_sub, PATH_TEST+"test_sub.S")
 
         # Run simulation
-        cmd_code, cmd_output = self.__run_command("./shell/test_run.sh")
+        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"test_run.sh")
         if cmd_code > 0:
             # Deploy error
             logging.error("(Result test) Unable to deploy:\n%s", cmd_output)
@@ -143,18 +148,18 @@ class Tester:
     def run_sr_test(self):
 
         # Clean test environment
-        self.__run_command("./shell/test_clean.sh")
+        self.__run_command("./"+PATH_SHELL+"/test_clean.sh")
 
         # Generate main
-        self.__run_command("cp templates/reg_sr_main_c test/main.c")
+        self.__run_command("cp "+PATH_TEMPLATES+"/reg_sr_main_c "+PATH_TEST+"/main.c")
 
-        # Generate gold ASM
+        # Generate reference ASM
         fitted_ref = self.sub_obj.insn_ref
         fitted_ref = self.__set_operands(fitted_ref, self.operand_cues, self.operand_subs)
-        self.__generate_from_template("templates/reg_sr_test_asm", fitted_ref, "test/test.S")
+        self.__generate_from_template(PATH_TEMPLATES+"reg_sr_test_asm", fitted_ref, PATH_TEST+"test.S")
 
         # Run reference simulation
-        cmd_code, cmd_output = self.__run_command("./shell/test_run.sh")
+        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"/test_run.sh")
         if cmd_code > 0:
             # Deploy error
             logging.error("(SR test) Unable to deploy reference:\n%s", cmd_output)
@@ -166,10 +171,10 @@ class Tester:
         # Generate subitution ASM
         fitted_sub = self.sub_obj.insn_sub
         fitted_sub = self.__set_operands(fitted_sub, self.operand_cues, self.operand_subs)
-        self.__generate_from_template("templates/reg_sr_test_asm", fitted_sub, "test/test.S")
+        self.__generate_from_template(PATH_TEMPLATES+"reg_sr_test_asm", fitted_sub, PATH_TEST+"/test.S")
 
         # Run substitution simulation
-        cmd_code, cmd_output = self.__run_command("./shell/test_run.sh")
+        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"/test_run.sh")
         if cmd_code > 0:
             # Deploy error
             logging.error("(SR test) Unable to deploy substitution:\n%s", cmd_output)

@@ -16,8 +16,8 @@
 `define OBF_INSN_TYPE_N  3'b000 // Null type (passthrough)
 `define OBF_INSN_TYPE_A  3'b001 // ALU
 `define OBF_INSN_TYPE_I  3'b010 // Immediate
-`define OBF_INSN_TYPE_B  3'b011 // Branch
+`define OBF_INSN_TYPE_M  3'b011 // Memory
 `define OBF_INSN_TYPE_F  3'b100 // Flag
 `define OBF_INSN_TYPE_S  3'b101 // System
-`define OBF_INSN_TYPE_M  3'b110 // Memory
+`define OBF_INSN_TYPE_B  3'b110 // Branch
 

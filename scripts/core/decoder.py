@@ -112,10 +112,10 @@ OR1200_RFWBOP_LR = "011"
 OR1200_RFWBOP_FPU = "100"
 
 
-def parse(instr):
+def parse(insn):
     word = ""
 
-    for op in instr.split():
+    for op in insn.split():
         if "l." in op:
             word = decode(op)
             break
@@ -126,156 +126,158 @@ def parse(instr):
     return word
 
 
-def get_opcode(instr):
+def get_opcode(insn):
 
-    if (instr == "l.add" or
-            instr == "l.and" or
-            instr == "l.cmov" or
-            instr == "l.div" or
-            instr == "l.divu" or
-            instr == "l.extbs" or
-            instr == "l.extbz" or
-            instr == "l.exths" or
-            instr == "l.exthz" or
-            instr == "l.extws" or
-            instr == "l.extwz" or
-            instr == "l.ff1" or
-            instr == "l.fl1" or
-            instr == "l.movhi" or
-            instr == "l.mul" or
-            instr == "l.muld" or
-            instr == "l.muldu" or
-            instr == "l.mulu" or
-            instr == "l.or" or
-            instr == "l.sll" or
-            instr == "l.sra" or
-            instr == "l.srl" or
-            instr == "l.sub" or
-            instr == "l.xor"):
+    if (insn == "l.add" or
+            insn == "l.addc" or
+            insn == "l.and" or
+            insn == "l.cmov" or
+            insn == "l.div" or
+            insn == "l.divu" or
+            insn == "l.extbs" or
+            insn == "l.extbz" or
+            insn == "l.exths" or
+            insn == "l.exthz" or
+            insn == "l.extws" or
+            insn == "l.extwz" or
+            insn == "l.ff1" or
+            insn == "l.fl1" or
+            insn == "l.mul" or
+            insn == "l.muld" or
+            insn == "l.muldu" or
+            insn == "l.mulu" or
+            insn == "l.or" or
+            insn == "l.sll" or
+            insn == "l.sra" or
+            insn == "l.srl" or
+            insn == "l.sub" or
+            insn == "l.xor"):
         return OR1200_OR32_ALU
-    if instr == "l.addi":
+    if insn == "l.addi":
         return OR1200_OR32_ADDI
-    elif instr == "l.addc" or instr == "l.addic":
-        return OR1200_ALUOP_ADDC
-    elif instr == "l.andi":
+    elif insn == "l.addic":
+        return OR1200_OR32_ADDIC
+    elif insn == "l.andi":
         return OR1200_OR32_ANDI
-    elif instr == "l.bf":
+    elif insn == "l.bf":
         return OR1200_OR32_BF
-    elif instr == "l.bnf":
+    elif insn == "l.bnf":
         return OR1200_OR32_BNF
-    elif (instr == "l.csync" or
-            instr == "l.msync" or
-            instr == "l.psync"):
+    elif (insn == "l.csync" or
+            insn == "l.msync" or
+            insn == "l.psync"):
         return OR1200_OR32_XSYNC
-    elif (instr == "l.cust1" or
-            instr == "l.cust2" or
-            instr == "l.cust3" or
-            instr == "l.cust4" or
-            instr == "l.cust5" or
-            instr == "l.cust6" or
-            instr == "l.cust7" or
-            instr == "l.cust8"):
+    elif (insn == "l.cust1" or
+            insn == "l.cust2" or
+            insn == "l.cust3" or
+            insn == "l.cust4" or
+            insn == "l.cust5" or
+            insn == "l.cust6" or
+            insn == "l.cust7" or
+            insn == "l.cust8"):
         # TODO
         pass
-    elif instr == "l.j":
+    elif insn == "l.j":
         return OR1200_OR32_J
-    elif instr == "l.jal":
+    elif insn == "l.jal":
         return OR1200_OR32_JAL
-    elif instr == "l.jalr":
+    elif insn == "l.jalr":
         return OR1200_OR32_JALR
-    elif instr == "l.jr":
+    elif insn == "l.jr":
         return OR1200_OR32_JR
-    elif instr == "l.lbs":
+    elif insn == "l.lbs":
         return OR1200_OR32_LBS
-    elif instr == "l.lbz":
+    elif insn == "l.lbz":
         return OR1200_OR32_LBZ
-    elif instr == "l.lhs":
+    elif insn == "l.lhs":
         return OR1200_OR32_LHS
-    elif instr == "l.lhz":
+    elif insn == "l.lhz":
         return OR1200_OR32_LHZ
-    elif instr == "l.lws":
+    elif insn == "l.lws":
         return OR1200_OR32_LWS
-    elif instr == "l.lwz":
+    elif insn == "l.lwz":
         return OR1200_OR32_LWZ
-    elif (instr == "l.mac" or
-            instr == "l.msb" or
-            instr == "l.msbu"):
+    elif (insn == "l.mac" or
+            insn == "l.msb" or
+            insn == "l.msbu"):
         return OR1200_OR32_MACMSB
-    elif instr == "l.maci":
+    elif insn == "l.maci":
         return OR1200_OR32_MACI
-    elif instr == "l.macrc":
+    elif insn == "l.macrc":
         return OR1200_OR32_MACRC
-    elif instr == "l.mfspr":
+    elif insn == "l.mfspr":
         return OR1200_OR32_MFSPR
-    elif instr == "l.mtspr":
+    elif insn == "l.movhi":
+        return OR1200_OR32_MOVHI
+    elif insn == "l.mtspr":
         return OR1200_OR32_MTSPR
-    elif instr == "l.muli":
+    elif insn == "l.muli":
         return OR1200_OR32_MULI
-    elif instr == "l.nop":
+    elif insn == "l.nop":
         return OR1200_OR32_NOP
-    elif instr == "l.ori":
+    elif insn == "l.ori":
         return OR1200_OR32_ORI
-    elif instr == "l.rfe":
+    elif insn == "l.rfe":
         return OR1200_OR32_RFE
-    elif instr == "l.rori":
+    elif insn == "l.rori":
         return OR1200_OR32_SH_ROTI
-    elif instr == "l.sb":
+    elif insn == "l.sb":
         return OR1200_OR32_SB
-    elif instr == "l.sd":
+    elif insn == "l.sd":
         # TODO
         pass
-    elif (instr == "l.sfeq" or
-            instr == "l.sfges" or
-            instr == "l.sfgeu" or
-            instr == "l.sfgts" or
-            instr == "l.sfgtu" or
-            instr == "l.sfles" or
-            instr == "l.sfleu" or
-            instr == "l.sflts" or
-            instr == "l.sfltu" or
-            instr == "l.sfne"):
+    elif (insn == "l.sfeq" or
+            insn == "l.sfges" or
+            insn == "l.sfgeu" or
+            insn == "l.sfgts" or
+            insn == "l.sfgtu" or
+            insn == "l.sfles" or
+            insn == "l.sfleu" or
+            insn == "l.sflts" or
+            insn == "l.sfltu" or
+            insn == "l.sfne"):
         return OR1200_OR32_SFXX
-    elif (instr == "l.sfeqi" or
-            instr == "l.sfgesi" or
-            instr == "l.sfgeui" or
-            instr == "l.sfgtsi" or
-            instr == "l.sfgtui" or
-            instr == "l.sflesi" or
-            instr == "l.sfleui" or
-            instr == "l.sfltsi" or
-            instr == "l.sfltui" or
-            instr == "l.sfnei"):
+    elif (insn == "l.sfeqi" or
+            insn == "l.sfgesi" or
+            insn == "l.sfgeui" or
+            insn == "l.sfgtsi" or
+            insn == "l.sfgtui" or
+            insn == "l.sflesi" or
+            insn == "l.sfleui" or
+            insn == "l.sfltsi" or
+            insn == "l.sfltui" or
+            insn == "l.sfnei"):
         return OR1200_OR32_SFXXI
-    elif instr == "l.sh":
+    elif insn == "l.sh":
         return OR1200_OR32_SH
-    elif (instr == "l.slli" or
-            instr == "l.srai" or
-            instr == "l.srli"):
+    elif (insn == "l.slli" or
+            insn == "l.srai" or
+            insn == "l.srli"):
         return OR1200_OR32_SH_ROTI
-    elif instr == "l.sw":
+    elif insn == "l.sw":
         return OR1200_OR32_SW
-    elif instr == "l.swa":
+    elif insn == "l.swa":
         # TODO
         pass
-    elif instr == "l.sys":
+    elif insn == "l.sys":
         # TODO
         pass
-    elif instr == "l.trap":
+    elif insn == "l.trap":
         # TODO
         pass
-    elif instr == "l.xori":
+    elif insn == "l.xori":
         return OR1200_OR32_XORI
     else:
         # TODO
         pass
 
-    logging.warn("(Decoder) Unable to get opcode of %s", instr)
+    logging.warning("(Decoder) Unable to get opcode of %s", insn)
     raise ValueError
 
 
-def decode(instr):
+def decode(insn):
 
-    opcode = get_opcode(instr)
+    opcode = get_opcode(insn)
 
     #
     # Decode of alu_op
@@ -317,11 +319,11 @@ def decode(instr):
     elif opcode == OR1200_OR32_SFXXI:
         alu_op = OR1200_ALUOP_COMP
 
-    # ALU instructions except the one with immediate
+    # ALU insnuctions except the one with immediate
     elif opcode == OR1200_OR32_ALU:
-        alu_op = get_alu_op(instr)
+        alu_op = get_aop(insn)
 
-    # SFXX instructions
+    # SFXX insnuctions
     elif opcode == OR1200_OR32_SFXX:
         alu_op = OR1200_ALUOP_COMP
 
@@ -392,7 +394,7 @@ def decode(instr):
     elif opcode == OR1200_OR32_SH:
         id_lsu_op = OR1200_LSUOP_SH
 
-    # Non load / store instructions
+    # Non load / store insnuctions
     else:
         id_lsu_op = OR1200_LSUOP_NOP
 
@@ -427,7 +429,7 @@ def decode(instr):
     elif opcode == OR1200_OR32_RFE:
         id_branch_op = OR1200_BRANCHOP_RFE
 
-    # Non branch instructions
+    # Non branch insnuctions
     else:
         id_branch_op = OR1200_BRANCHOP_NOP
 
@@ -474,26 +476,26 @@ def decode(instr):
     elif opcode == OR1200_OR32_SH:
         sel_imm = "0"
 
-    # ALU instructions except the one with immediate
+    # ALU insnuctions except the one with immediate
     elif opcode == OR1200_OR32_ALU:
         sel_imm = "0"
 
-    # SFXX instructions
+    # SFXX insnuctions
     elif opcode == OR1200_OR32_SFXX:
         sel_imm = "0"
 
-    # l.cust5 instructions
+    # l.cust5 insnuctions
     elif opcode == OR1200_OR32_CUST5:
         sel_imm = "0"
 
-    # FPU instructions
+    # FPU insnuctions
     elif opcode == OR1200_OR32_FLOAT:
         sel_imm = "0"
     # l.nop
     elif opcode == OR1200_OR32_NOP:
         sel_imm = "0"
 
-    # All instructions with immediates
+    # All insnuctions with immediates
     else:
         sel_imm = "1"
 
@@ -571,11 +573,11 @@ def decode(instr):
     elif opcode == OR1200_OR32_ALU:
         rfwb_op = OR1200_RFWBOP_ALU + "1"
 
-    # l.cust5 instructions
+    # l.cust5 insnuctions
     elif opcode == OR1200_OR32_CUST5:
         rfwb_op = OR1200_RFWBOP_ALU + "1"
 
-    # Instructions w/o register-file write-back
+    # insnuctions w/o register-file write-back
     else:
         rfwb_op = OR1200_RFWBOP_NOP
 
@@ -618,7 +620,7 @@ def decode(instr):
     elif opcode == OR1200_OR32_SH:
         id_lsu_op = OR1200_LSUOP_SH
 
-    # Non load/store instructions
+    # Non load/store insnuctions
     else:
         id_lsu_op = OR1200_LSUOP_NOP
 
@@ -628,60 +630,120 @@ def decode(instr):
     return du_word
 
 
-def get_alu_op(instr):
-    if instr == "l.add":
+def get_aop(insn):
+    if insn == "l.add":
         return OR1200_ALUOP_ADD
-    if instr == "l.and":
+    if insn == "l.and":
         return OR1200_ALUOP_AND
-    if instr == "l.cmov":
+    if insn == "l.cmov":
         return OR1200_ALUOP_CMOV
-    if instr == "l.div":
+    if insn == "l.div":
         return OR1200_ALUOP_DIV
-    if instr == "l.divu":
+    if insn == "l.divu":
         return OR1200_ALUOP_DIVU
-    if instr == "l.extbs":
+    if insn == "l.extbs":
         return OR1200_ALUOP_EXTHB
-    if instr == "l.extbz":
+    if insn == "l.extbz":
         return OR1200_ALUOP_EXTHB
-    if instr == "l.exths":
+    if insn == "l.exths":
         return OR1200_ALUOP_EXTHB
-    if instr == "l.exthz":
+    if insn == "l.exthz":
         return OR1200_ALUOP_EXTHB
-    if instr == "l.extws":
+    if insn == "l.extws":
         return OR1200_ALUOP_EXTW
-    if instr == "l.extwz":
+    if insn == "l.extwz":
         return OR1200_ALUOP_EXTW
-    if instr == "l.ff1":
+    if insn == "l.ff1":
         return OR1200_ALUOP_FFL1
-    if instr == "l.fl1":
+    if insn == "l.fl1":
         return OR1200_ALUOP_FFL1
-    if instr == "l.movhi":
+    if insn == "l.movhi":
         return OR1200_ALUOP_MOVHI
-    if instr == "l.mul":
+    if insn == "l.mul":
         return OR1200_ALUOP_MUL
-    if instr == "l.muld":
+    if insn == "l.muld":
         # TODO
         pass
-    if instr == "l.muldu":
+    if insn == "l.muldu":
         # TODO
         pass
-    if instr == "l.mulu":
+    if insn == "l.mulu":
         return OR1200_ALUOP_MULU
-    if instr == "l.or":
+    if insn == "l.or":
         return OR1200_ALUOP_OR
-    if instr == "l.sll":
+    if insn == "l.sll":
         return OR1200_ALUOP_SHROT
-    if instr == "l.sra":
+    if insn == "l.sra":
         return OR1200_ALUOP_SHROT
-    if instr == "l.srl":
+    if insn == "l.srl":
         return OR1200_ALUOP_SHROT
-    if instr == "l.sub":
+    if insn == "l.sub":
         return OR1200_ALUOP_SUB
-    if instr == "l.xor":
+    if insn == "l.xor":
         return OR1200_ALUOP_XOR
     else:
         # TODO
         pass
 
-    logging.warn("(Decoder) Unable to get ALU opcode of %s", instr)
+    logging.warning("(Decoder) Unable to get ALU opcode of %s", insn)
+    raise ValueError
+
+
+def get_extra_opcode(insn):
+    if insn == "l.add":
+        return "00000000"
+    if insn == "l.addc":
+        return "00000001"
+    if insn == "l.and":
+        return "00000011"
+    if insn == "l.cmov":
+        return "00001110"
+    if insn == "l.div":
+        return "11001001"
+    if insn == "l.divu":
+        return "11001010"
+    if insn == "l.extbs":
+        return "00011100"
+    if insn == "l.extbz":
+        return "00111100"
+    if insn == "l.exths":
+        return "00001100"
+    if insn == "l.exthz":
+        return "00101100"
+    if insn == "l.extws":
+        return "00001101"
+    if insn == "l.extwz":
+        return "00011101"
+    if insn == "l.ff1":
+        return "00001111"
+    if insn == "l.fl1":
+        return "01001111"
+    if insn == "l.mul":
+        return "11000110"
+    if insn == "l.muld":
+        # TODO
+        pass
+    if insn == "l.muldu":
+        # TODO
+        pass
+    if insn == "l.mulu":
+        # TODO
+        pass
+    if insn == "l.or":
+        return "00000100"
+    if insn == "l.sll":
+        return "00001000"
+    if insn == "l.sra":
+        return "00101000"
+    if insn == "l.srl":
+        return "00011000"
+    if insn == "l.sub":
+        return "00000010"
+    if insn == "l.xor":
+        return "00000101"
+    else:
+        # TODO
+        pass
+
+    logging.warning("(Decoder) Unable to get extra opcode of %s", insn)
     raise ValueError

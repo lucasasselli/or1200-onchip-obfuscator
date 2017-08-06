@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import argparse
 from operator import itemgetter
-import decoder
-import utils
+from core import decoder
+from core import utils
 import logging
 
 
@@ -18,7 +18,7 @@ utils.init_logger(args.out)
 
 # Read instruction list
 instr_list = []
-instr_file_name = "other/instr_list"
+instr_file_name = "core/other/instr_list"
 
 with open(instr_file_name, 'r') as f:
     for line in f:
@@ -27,7 +27,7 @@ with open(instr_file_name, 'r') as f:
 
 # Read dummy list
 dummy_list = []
-dummy_file_name = "other/dummy_list"
+dummy_file_name = "core/other/dummy_list"
 
 with open(dummy_file_name, 'r') as f:
     for line in f:
@@ -66,9 +66,9 @@ for instr in instr_list:
 # Print the result
 for result in result_table:
     # Print header
-    logging.info(50*'#')
+    logging.info(50 * '#')
     logging.info("%s %s", result[0], result[1])
-    logging.info(50*'#')
+    logging.info(50 * '#')
 
     # Print table
     for dummy in result[2]:

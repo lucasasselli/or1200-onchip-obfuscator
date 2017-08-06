@@ -1,6 +1,6 @@
-import decoder
-import utils
-import tester
+from core import decoder
+from core import utils
+from core import tester
 
 
 class InsnSub:

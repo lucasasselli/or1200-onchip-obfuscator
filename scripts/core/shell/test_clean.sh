@@ -10,4 +10,4 @@ exec 2>&1
 rm -rf build
 
 # Compile test
-make clean -C test
+make clean -C core/test

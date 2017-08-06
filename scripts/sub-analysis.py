@@ -2,7 +2,7 @@
 
 import argparse
 import logging
-import utils
+from core import utils
 
 # Constants
 EXEC_MODE_SINGLE = 0
@@ -57,7 +57,7 @@ parser.add_argument("-d", "--debug", action='store_true', help="enable debug out
 args = parser.parse_args()
 
 # Logger
-utils.init_logger(args.out)
+utils.init_logger(args.out, debug=args.debug)
 
 # Read table
 f = open(args.file, 'rt')

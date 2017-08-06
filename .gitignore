@@ -19,8 +19,8 @@ __pycache__/
 *$py.class
 
 # Scripts
-scripts/sub-analyzer/test/*.c
-scripts/sub-analyzer/test/*.S
+scripts/core/test/*.c
+scripts/core/test/*.S
 
 ##################################################
 # Fusesoc
@@ -28,4 +28,4 @@ scripts/sub-analyzer/test/*.S
 
 *transcript
 build/*
-scripts/sub-analyzer/build/*
+scripts/build/*

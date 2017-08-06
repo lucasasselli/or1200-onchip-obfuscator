@@ -1,5 +1,5 @@
 import csvkit
-import core
+from core import common
 import logging
 import logging.handlers
 
@@ -32,7 +32,7 @@ def load_csv(f, skip_header):
                 if not insn_sub_field:
                     break
 
-                insn_sub = core.InsnSub(insn_ref_field, insn_sub_field)
+                insn_sub = common.InsnSub(insn_ref_field, insn_sub_field)
 
                 insn_sub_array.append(insn_sub)
 
@@ -129,17 +129,18 @@ class LogFormatter(logging.Formatter):
         return formatted
 
 
-def init_logger(log_file, debug=0):
+def init_logger(log_file="", debug=False, log_to_file=True):
     logger = logging.getLogger()
 
-    if debug == 0:
-        logger.setLevel(logging.INFO)
-    else:
+    if debug:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(log_file, mode="w")
-    file_handler.setFormatter(LogFormatter(monochrome=1))
-    logger.addHandler(file_handler)
+    if log_to_file:
+        file_handler = logging.FileHandler(log_file, mode="w")
+        file_handler.setFormatter(LogFormatter(monochrome=1))
+        logger.addHandler(file_handler)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(LogFormatter(monochrome=0))

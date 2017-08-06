@@ -19,14 +19,14 @@ l.and r0,r0,r0",
 l.xori rD,rB,-1
 l.or rD,rD,r0
 l.xori rD,rD,-1
-l.xor r0, r0, r0","l.and rD,rA,rB
+l.xor r0,r0,r0","l.and rD,rA,rB
 l.extbs r0,r0",
 "l.andi rD,rA,K","l.ori r0,r0,K
 l.xori r0,r0,-1
 l.xori rD,rA,-1
 l.or rD,rD,r0
 l.xori rD,rD,-1
-l.xor r0, r0, r0","l.ori r0,r0,K
+l.xor r0,r0,r0","l.ori r0,r0,K
 l.and rD,rA,r0
 l.xor r0,r0,r0",
 l.bf N,,,
@@ -58,8 +58,8 @@ l.srli rD,rD,16",
 "l.ff1 rD,rA","l.ff1 rD,rA
 l.movhi r0,0","l.ff1 rD,rA
 l.nop",
-"l.fl1 rD,rA","l.ff1 rD,rA
-l.movhi r0,0","l.ff1 rD,rA
+"l.fl1 rD,rA","l.fl1 rD,rA
+l.movhi r0,0","l.fl1 rD,rA
 l.nop",
 l.j N,,,
 l.jal N,,,
@@ -103,8 +103,8 @@ l.xor r0,r0,r0",
 "l.msb rA,rB",,,
 "l.msbu rA,rB",,,
 l.msync,,,
-"l.mtspr rA,rB,K","l.mtspr rD,rA,K
-l.andi r0,r0,0","l.mtspr rD,rA,K
+"l.mtspr rA,rB,K","l.mtspr rA,rB,K
+l.andi r0,r0,0","l.mtspr rA,rB,K
 l.and r0,r0,r0",
 "l.mul rD,rA,rB",,,
 "l.muld rA,rB",,,
