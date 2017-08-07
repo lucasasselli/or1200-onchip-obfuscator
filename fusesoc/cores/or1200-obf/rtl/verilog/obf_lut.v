@@ -168,7 +168,7 @@ always @(index) begin
         `OBF_IGU_WIDTH'd22: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd57;
         `OBF_IGU_WIDTH'd21: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd58;
         `OBF_IGU_WIDTH'd33: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd59;
-        `OBF_IGU_WIDTH'd5: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd61;
+        `OBF_IGU_WIDTH'd6: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd61;
         `OBF_IGU_WIDTH'd48: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd64;
         `OBF_IGU_WIDTH'd68: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd66;
         `OBF_IGU_WIDTH'd30: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd74;
@@ -188,7 +188,7 @@ always @(index) begin
     endcase
 end
 
-assign lut0_addr = lut0_pointer+ ppc;
+assign lut0_addr = lut0_pointer+ppc;
 assign out_sub = lut0[lut0_addr];
 assign out_imm = lut0[lut0_addr+1];
 

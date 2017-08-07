@@ -27,6 +27,7 @@ always @(insn)
                 // l.macrc
                 i = `OBF_IGU_WIDTH'd5;
             else
+                // l.movhi
                 i = `OBF_IGU_WIDTH'd6; 
         // l.sys / l.trap / l.xsync
         6'b001000 :

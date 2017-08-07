@@ -5,6 +5,11 @@ from core import utils
 from core import decoder
 import re
 
+
+# Configuration
+SHARED_POINTERS_ENABLED = True
+
+# Constants
 INSN_TYPE_N = "000"
 INSN_TYPE_A = "001"
 INSN_TYPE_I = "010"
@@ -19,6 +24,17 @@ def bin_digits(x, bits):
     n = int(x)
     s = bin(n & int("1" * bits, 2))[2:]
     return ("{0:0>%s}" % (bits)).format(s)
+
+
+def is_sublist(a, b, start=0):
+    if a == []:
+        return start
+    if b == []:
+        return -1
+    if b[:len(a)] == a:
+        return start
+    else:
+        return is_sublist(a, b[1:], start+1)
 
 
 def get_D_field(x):
@@ -86,9 +102,9 @@ def get_index(name):
         return 3
     if name == "l.nop":
         return 4
-    if name == "l.movhi":
-        return 5
     if name == "l.macrc":
+        return 5
+    if name == "l.movhi":
         return 6
     if name == "l.sys":
         return 7
@@ -332,11 +348,10 @@ def get_lut_line(line, ref, stop):
     else:
         stop_field = "0"
 
-    # Return type N
-    # TODO check if it's equal to ref
-    # TODO force type N is insn is equal to ref
-    if insn_type == INSN_TYPE_N:
-        return [INSN_TYPE_N + 12 * "0" + stop_field]
+    # Force type N
+    if line == ref and SHARED_POINTERS_ENABLED:
+        logging.debug("Substitution is identical to reference, force N type")
+        insn_type = INSN_TYPE_N
 
     out_array = []
 
@@ -480,8 +495,7 @@ for lut_index in range(0, lut_number):
         ref_insn_split = ref_insn.split()
         decoder_index = get_index(ref_insn_split[0])
 
-        decoder_word = [decoder_index, lut_pointer]
-        lut_decoder.append(decoder_word)
+        temp_lut_content = []
 
         for line_index, line in enumerate(sub_asm_split):
 
@@ -497,10 +511,24 @@ for lut_index in range(0, lut_number):
                 logging.error("[%d:%d:%d] Error while parsing substitution: %s", lut_index, insn_index, line_index, line)
                 exit()
 
-            # Add stop bit
+            temp_lut_content += lut_word
 
-            lut_content = lut_content + lut_word
-            lut_pointer += len(lut_word)
+        # Add substitution to decoder
+        match_pointer = is_sublist(temp_lut_content, lut_content)
+        if(match_pointer >= 0 and SHARED_POINTERS_ENABLED):
+            logging.debug("[%d:%d] Substituion found at LUT index %d", lut_index, insn_index, match_pointer)
+
+            # Add reference to decoder
+            decoder_word = [decoder_index, match_pointer]
+            lut_decoder.append(decoder_word)
+        else:
+            # Add substitution to decoder
+            decoder_word = [decoder_index, lut_pointer]
+            lut_decoder.append(decoder_word)
+
+            # Add substitution to LUT
+            lut_content += temp_lut_content
+            lut_pointer += len(temp_lut_content)
 
     # Write decoder content
     for lut_decoder_word in lut_decoder:
