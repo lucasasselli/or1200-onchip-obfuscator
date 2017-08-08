@@ -113,7 +113,6 @@ OR1200_RFWBOP_FPU = "100"
 
 
 def parse(insn):
-    word = ""
 
     for op in insn.split():
         if "l." in op:
@@ -633,6 +632,8 @@ def decode(insn):
 def get_aop(insn):
     if insn == "l.add":
         return OR1200_ALUOP_ADD
+    if insn == "l.addc":
+        return OR1200_ALUOP_ADDC
     if insn == "l.and":
         return OR1200_ALUOP_AND
     if insn == "l.cmov":

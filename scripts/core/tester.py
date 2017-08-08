@@ -1,191 +1,202 @@
+import os
 import re
 import subprocess
 import logging
+import shutil
 
+from core import utils
 
-# Result codes
-RESULT_SKIP = -1
-RESULT_SUCCESS = 0
-RESULT_ERROR_UNKNOWN = 1
-RESULT_ERROR_DEPLOY = 2
-RESULT_ERROR_MISMATCH = 3
+# Constants
+SIMULATOR = "icarus"
+TARGET = "or1200-ref-generic"
 
 # Paths
-PATH_TEMPLATES = "core/templates/"
-PATH_TEST = "core/test/"
-PATH_SHELL = "core/shell/"
+DIR_TEMPLATES = "templates"
+DIR_TEST = "test"
+DIR_SHELL = "shell"
+
+PATH_WORK = "/tmp/obf-temp"
+
+FILE_SIM_RESULT = "tb-general.log"
+
+OPERAND_SUBS = [("rA", "r3"), ("rB", "r4"), ("rD", "r31"), ("I", "8"), ("N", "8"), ("K", "8"), ("L", "8")]
 
 
-def parse_result_code(code):
+class TestFile:
 
-    if code == RESULT_SKIP:
-        # Test skipped
-        return "Skipped"
+    def __init__(self, template_name, code, output_name, has_code=True):
+        self.has_code = has_code
+        self.template_name = template_name
+        self.output_name = output_name
+        self.code = code
 
-    if code == RESULT_SUCCESS:
-        # Test passed
-        return "OK"
+    def write(self):
+        # Read in the file
+        res_path = utils.get_res_path()
 
-    if code == RESULT_ERROR_DEPLOY:
-        # Test failed: deploy error
-        return "DEPLOY ERROR"
+        template_path = os.path.join(res_path, DIR_TEMPLATES, self.template_name)
+        output_path = os.path.join(PATH_WORK, DIR_TEST, self.output_name)
 
-    if code == RESULT_ERROR_MISMATCH:
-        # Test failed: result mismatch
-        return "MISMATCH ERROR"
+        with open(template_path, 'r') as file:
+            filedata = file.read()
+
+        if self.has_code:
+            # Swap placeholder operands with real ones
+            for i in range(0, len(OPERAND_SUBS)):
+                self.code = self.code.replace(OPERAND_SUBS[i][0], OPERAND_SUBS[i][1])
+
+            # Replace the target string
+            filedata = filedata.replace("//||//", self.code)
+
+        # Write the file out again
+        with open(output_path, 'w') as file:
+            file.write(filedata)
 
 
 class Tester:
 
-    operand_cues = ["rA", "rB", "rD", "I", "N", "K", "L"]
-    operand_subs = ["r3", "r4", "r31", "8", "8", "8", "8"]
+    result_array = []
 
     def __init__(self, sub_obj):
         self.sub_obj = sub_obj
-
-    # Generates build file from template file
-    def __generate_from_template(self, infile, sub, outfile):
-        # Read in the file
-        with open(infile, 'r') as file:
-            filedata = file.read()
-
-        # Replace the target string
-        filedata = filedata.replace("//||//", sub)
-
-        # Write the file out again
-        with open(outfile, 'w') as file:
-            file.write(filedata)
-
-    # Sets gold/sub operands
-    def __set_operands(self, code, cues, subs):
-        for i in range(0, len(cues)):
-            code = code.replace(cues[i], subs[i])
-        return code
-
-    def __read_sim_result(self):
-        with open(PATH_TEST+"simulation.log") as file:
-            filedata = file.read()
-
-        # Get result
-        report_array = re.findall(r"\((.*?)\)", filedata)
-
-        return report_array, filedata
 
     def __run_command(self, command):
         result = 0
         output = ""
         try:
-            subprocess.check_output(command, shell=True, universal_newlines=True)
+            subprocess.check_output(command, shell=True, universal_newlines=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as exc:
-            result = exc.returncode
             output = exc.output
-        return result, output
+            result = exc.returncode
+            logging.error("Error running command %s:\n%s", command, output)
+
+        logging.debug("Command: %s\nOutput: %s", command, output)
+
+        return result
+
+    def __simulate(self, test_file_array):
+
+        res_path = utils.get_res_path()
+        root_path = utils.get_root_path()
+
+        # Clear work directory
+        if os.path.exists(PATH_WORK):
+            shutil.rmtree(PATH_WORK)
+        os.mkdir(PATH_WORK)
+
+        # Move test folder
+        work_test_path = os.path.join(PATH_WORK, DIR_TEST)
+        core_test_path = os.path.join(res_path, DIR_TEST)
+        shutil.copytree(core_test_path, work_test_path)
+
+        # Write test files
+        for test_file in test_file_array:
+            test_file.write()
+
+        # Compile test
+        if self.__run_command("make all -C " + work_test_path) > 0:
+            logging.error("Unable to compile test")
+            return False
+
+        # Run the actual simulation
+        fusesoc_path = os.path.join(root_path, "fusesoc")
+        elf_path = os.path.join(work_test_path, "test.elf")
+        cmd_string = "cd " + PATH_WORK + "; fusesoc --cores-root=" + fusesoc_path + " sim --sim=" + SIMULATOR + " " + TARGET + " --elf-load=" + elf_path
+        if self.__run_command(cmd_string) > 0:
+            logging.error("Unable to run the simulation")
+            return False
+
+        # Read results
+        result_local_path = "build/" + TARGET + "_0/sim-" + SIMULATOR + "/" + FILE_SIM_RESULT
+        result_path = os.path.join(PATH_WORK, result_local_path)
+
+        with open(result_path) as file:
+            filedata = file.read()
+
+        # Get result
+        result_array = re.findall(r"\((.*?)\)", filedata)
+
+        if(len(result_array) == 0):
+            logging.error("Simulation output is empty")
+            return False
+
+        self.result_array = result_array
+
+        return True
 
     # Checks if the substitution produces the same result of the reference
     def run_result_test(self):
 
-        # Clean test environment
-        self.__run_command("./"+PATH_SHELL+"/test_clean.sh")
-
         # If the instruction has no destiniation register, skip it
         if "rD" not in self.sub_obj.insn_sub:
             logging.debug("(Result test) Substitution has no destination register: skipping...")
-            return RESULT_SKIP
+            return False
 
         # Generate main
-        self.__run_command("cp "+PATH_TEMPLATES+"reg_result_main_c "+PATH_TEST+"/main.c")
+        test_file_array = []
+        test_file_array.append(TestFile("reg_result_main_c", None, "main.c", False))
+        test_file_array.append(TestFile("reg_result_test_ref_asm", self.sub_obj.insn_ref, "test_ref.S"))
+        test_file_array.append(TestFile("reg_result_test_sub_asm", self.sub_obj.insn_sub, "test_sub.S"))
 
-        # Generate reference ASM
-        fitted_ref = self.sub_obj.insn_ref
-        fitted_ref = self.__set_operands(fitted_ref, self.operand_cues, self.operand_subs)
-        self.__generate_from_template(PATH_TEMPLATES+"reg_result_test_ref_asm", fitted_ref, PATH_TEST+"/test_ref.S")
+        result = self.__simulate(test_file_array)
 
-        # Generate subitution ASM
-        fitted_sub = self.sub_obj.insn_sub
-        fitted_sub = self.__set_operands(fitted_sub, self.operand_cues, self.operand_subs)
-        self.__generate_from_template(PATH_TEMPLATES+"reg_result_test_sub_asm", fitted_sub, PATH_TEST+"test_sub.S")
+        if result:
+            # Parse exit code
+            try:
+                sim_exit_code = int(self.result_array[-1], 16)
+            except ValueError:
+                logging.error("(Result test) Unable to parse exit code")
+                return False
 
-        # Run simulation
-        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"test_run.sh")
-        if cmd_code > 0:
-            # Deploy error
-            logging.error("(Result test) Unable to deploy:\n%s", cmd_output)
-            return RESULT_ERROR_DEPLOY
+            if sim_exit_code != 1:
+                if len(self.result_array) < 5:
+                    logging.error("(Result test) Bad output")
+                    return False
 
-        # Check results
-        sim_result_array, sim_output = self.__read_sim_result()
+                # Parse simulation output
+                error_iteration = int(self.result_array[0], 16)
+                error_operand1 = self.result_array[1]
+                error_operand2 = self.result_array[2]
+                error_result_ref = self.result_array[3]
+                error_result_sub = self.result_array[4]
 
-        if len(sim_result_array) == 0:
-            logging.error("(Result test) Test returned an empty output")
-            return RESULT_ERROR_UNKNOWN
+                logging.error("(Result test) Mismatch at iteration %d:\nI=%s,%s\nR=%s\nS=%s",
+                              error_iteration, error_operand1, error_operand2, error_result_ref, error_result_sub)
 
-        try:
-            sim_exit_code = int(sim_result_array[-1], 16)
-        except ValueError:
-            logging.error("(Result test) Unable to parse exit code")
-            return RESULT_ERROR_UNKNOWN
+                return False
 
-        if sim_exit_code != 1:
-            print(sim_result_array)
-            if len(sim_result_array) < 5:
-                logging.error("(Result test) Bad output:\n%s", sim_output)
-                return RESULT_ERROR_UNKNOWN
-
-            # Parse simulation output
-            error_iteration = int(sim_result_array[0], 16)
-            error_operand1 = sim_result_array[1]
-            error_operand2 = sim_result_array[2]
-            error_result_ref = sim_result_array[3]
-            error_result_sub = sim_result_array[4]
-
-            logging.error("(Result test) Mismatch at iteration %d:\nI=%s,%s\nR=%s\nS=%s",
-                          error_iteration, error_operand1, error_operand2, error_result_ref, error_result_sub)
-
-            return RESULT_ERROR_MISMATCH
-
-        return RESULT_SUCCESS
+            return True
+        else:
+            # Simulation failed
+            logging.error("(Result test) Unable to deploy test")
+            return False
 
     def run_sr_test(self):
 
-        # Clean test environment
-        self.__run_command("./"+PATH_SHELL+"/test_clean.sh")
+        test_file_array = []
+        test_file_array.append(TestFile("reg_sr_main_c", None, "main.c", False))
+        test_file_array.append(TestFile("reg_sr_test_asm", self.sub_obj.insn_ref, "test.S"))
 
-        # Generate main
-        self.__run_command("cp "+PATH_TEMPLATES+"/reg_sr_main_c "+PATH_TEST+"/main.c")
+        result = self.__simulate(test_file_array)
+        ref_result_array = self.result_array
 
-        # Generate reference ASM
-        fitted_ref = self.sub_obj.insn_ref
-        fitted_ref = self.__set_operands(fitted_ref, self.operand_cues, self.operand_subs)
-        self.__generate_from_template(PATH_TEMPLATES+"reg_sr_test_asm", fitted_ref, PATH_TEST+"test.S")
+        if not result:
+            logging.error("(SR test) Unable to deploy reference test")
+            return False
 
-        # Run reference simulation
-        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"/test_run.sh")
-        if cmd_code > 0:
-            # Deploy error
-            logging.error("(SR test) Unable to deploy reference:\n%s", cmd_output)
-            return RESULT_ERROR_DEPLOY
+        test_file_array = []
+        test_file_array.append(TestFile("reg_sr_main_c", None, "main.c", False))
+        test_file_array.append(TestFile("reg_sr_test_asm", self.sub_obj.insn_ref, "test.S"))
 
-        # Check results
-        sim_gold_sr_array, sim_gold_output = self.__read_sim_result()
+        result = self.__simulate(test_file_array)
+        sub_result_array = self.result_array
 
-        # Generate subitution ASM
-        fitted_sub = self.sub_obj.insn_sub
-        fitted_sub = self.__set_operands(fitted_sub, self.operand_cues, self.operand_subs)
-        self.__generate_from_template(PATH_TEMPLATES+"reg_sr_test_asm", fitted_sub, PATH_TEST+"/test.S")
+        if not result:
+            logging.error("(SR test) Unable to deploy substitution test")
+            return False
 
-        # Run substitution simulation
-        cmd_code, cmd_output = self.__run_command("./"+PATH_SHELL+"/test_run.sh")
-        if cmd_code > 0:
-            # Deploy error
-            logging.error("(SR test) Unable to deploy substitution:\n%s", cmd_output)
-            return RESULT_ERROR_DEPLOY
-
-        # Check results
-        sim_sub_sr_array, sim_sub_output = self.__read_sim_result()
-
-        if sim_gold_sr_array == sim_sub_sr_array:
-            return RESULT_SUCCESS
+        if sub_result_array == ref_result_array:
+            return True
         else:
-            error_out = "Reference:\n" + sim_gold_output + "\nSubstitution:\n" + sim_sub_output
-            logging.error("(SR test) Mismatch:\n%s", error_out)
-            return RESULT_ERROR_MISMATCH
+            logging.error("(SR test) Mismatch")
+            return False

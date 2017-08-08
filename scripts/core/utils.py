@@ -1,7 +1,17 @@
+import os
 import csvkit
-from core import common
 import logging
 import logging.handlers
+
+from core import common
+
+
+def get_res_path():
+    return os.path.join(os.path.dirname(__file__), common.DIR_RESOURCES)
+
+
+def get_root_path():
+    return os.path.join(os.path.dirname(__file__), common.DIR_ROOT)
 
 
 def load_csv(f, skip_header):
@@ -45,15 +55,19 @@ def load_csv(f, skip_header):
     return insn_ref_array, insn_sub_table
 
 
-def jaccd(str1, str2):
+def dscore(str1, str2, mode="jaccd"):
     if len(str1) != len(str2):
         raise ValueError
 
+    f00 = 0
     f01 = 0
     f10 = 0
     f11 = 0
 
     for i in range(0, len(str1)):
+        if str1[i] == "0" and str2[i] == "0":
+            f00 += 1
+
         if str1[i] == "0" and str2[i] == "1":
             f01 += 1
 
@@ -63,28 +77,17 @@ def jaccd(str1, str2):
         if str1[i] == "1" and str2[i] == "1":
             f11 += 1
 
-    d = f01 + f10 + f11
+    if(mode == "jaccd"):
+        d = f01 + f10 + f11
 
-    if d != 0:
-        return 1 - (f11 / d)
+        if d != 0:
+            return (f01 + f10) / (f01 + f10 + f11)
+        else:
+            return 0
+    elif(mode == "smd"):
+        return (f01 + f10) / len(str1)
     else:
-        return 0
-
-    return
-
-
-def smd(str1, str2):
-    if len(str1) != len(str2):
         raise ValueError
-
-    D = 0
-    U = len(str1)
-
-    for i in range(0, len(str1)):
-        if str1[i] != str2[i]:
-            D += 1
-
-    return D / U
 
 
 # Logger

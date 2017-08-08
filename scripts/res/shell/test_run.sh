@@ -1,5 +1,4 @@
 #!/bin/bash
-
 SIMULATOR=icarus
 TARGET_SYS=or1200-ref-generic
 
@@ -9,13 +8,18 @@ set -e
 # Redirect STDERR to STDOUT
 exec 2>&1
 
-ROOT=../
+RES=$1
+ROOT=${RES}/../
+WORK=/temp/obf-analysis
+
+cd $WORK
 
 # Compile test
-make all -C core/test
+cp ${RES}/test ${WORK}/test
+make all -C test
 
 # Run simulation
-fusesoc --cores-root=${ROOT}/fusesoc sim --sim=${SIMULATOR} ${TARGET_SYS} --elf-load=core/test/test.elf
+fusesoc --cores-root=${ROOT}/fusesoc sim --sim=${SIMULATOR} ${TARGET_SYS} --elf-load=${RES}/test.elf
 
 # Get logs
 echo $(pwd)

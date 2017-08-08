@@ -1,0 +1,22 @@
+  .section .data
+
+  .section .text
+  .global test_sub
+
+test_sub:
+    // Generate carry flag
+    l.andi r25,r3,1
+    l.addi r25,r25,-1
+
+    // Code payload
+    l.xori r31,r3,8
+l.sll r0,r0,r0
+
+    // Report result
+    // l.or r3,r0,r31
+    // l.nop NOP_REPORT
+
+    // Return
+    l.ori r11,r31,0
+    l.jr r9 
+    l.nop   

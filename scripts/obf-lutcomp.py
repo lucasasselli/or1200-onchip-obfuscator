@@ -34,7 +34,7 @@ def is_sublist(a, b, start=0):
     if b[:len(a)] == a:
         return start
     else:
-        return is_sublist(a, b[1:], start+1)
+        return is_sublist(a, b[1:], start + 1)
 
 
 def get_D_field(x):
@@ -441,103 +441,108 @@ def get_lut_line(line, ref, stop):
     return [INSN_TYPE_N + 12 * "0" + stop_field]
 
 
-# Parse arguments
-parser = argparse.ArgumentParser(description="Generate LUT content for hardware obfuscator")
-parser.add_argument("file", type=str, help="input file")
-parser.add_argument("-o", "--out", default="lut.v", type=str, help="output file")
-parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
-args = parser.parse_args()
+def main():
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Generate LUT content for hardware obfuscator")
+    parser.add_argument("file", type=str, help="input file")
+    parser.add_argument("-o", "--out", default="lut.v", type=str, help="output file")
+    parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
+    args = parser.parse_args()
 
-# Logger
-utils.init_logger(debug=args.debug, log_to_file=False)
+    # Logger
+    utils.init_logger(debug=args.debug, log_to_file=False)
 
-# Read table
-f = open(args.file, 'rt')
-insn_ref_array, insn_sub_table = utils.load_csv(f, 1)
+    # Read table
+    f = open(args.file, 'rt')
+    insn_ref_array, insn_sub_table = utils.load_csv(f, 1)
 
-# Output file
-f = open(args.out, 'w')
+    # Output file
+    f = open(args.out, 'w')
 
-# Compile
-logging.info("Compiler running...")
+    # Compile
+    logging.info("Compiler running...")
 
-lut_number = 0  # Stores the number of luts
+    lut_number = 0  # Stores the number of luts
 
-# Run initial analysis
-for insn_sub_row in insn_sub_table:
-    lut_number = max(len(insn_sub_row), lut_number)
+    # Run initial analysis
+    for insn_sub_row in insn_sub_table:
+        lut_number = max(len(insn_sub_row), lut_number)
 
-logging.debug("LUT number is %d", lut_number)
+    logging.debug("LUT number is %d", lut_number)
 
-# Run compilation
-for lut_index in range(0, lut_number):
+    # Run compilation
+    for lut_index in range(0, lut_number):
 
-    lut_pointer = 0
-    lut_content = []
-    lut_decoder = []
+        lut_pointer = 0
+        lut_content = []
+        lut_decoder = []
 
-    logging.info("Compiling LUT %d", lut_index)
+        logging.info("Compiling LUT %d", lut_index)
 
-    # First line is reserved to missing substitutions
-    lut_content.append(15 * "0" + "1")
-    lut_pointer += 1
+        # First line is reserved to missing substitutions
+        lut_content.append(15 * "0" + "1")
+        lut_pointer += 1
 
-    for insn_index, insn_sub_row in enumerate(insn_sub_table):
-        if lut_index >= len(insn_sub_row):
-            logging.warning("[%d:%d] Missing substitution", lut_index, insn_index)
-            continue
+        for insn_index, insn_sub_row in enumerate(insn_sub_table):
+            if lut_index >= len(insn_sub_row):
+                logging.warning("[%d:%d] Missing substitution", lut_index, insn_index)
+                continue
 
-        sub_asm = insn_sub_row[lut_index].insn_sub
-        sub_asm_split = sub_asm.split("\n")
+            sub_asm = insn_sub_row[lut_index].insn_sub
+            sub_asm_split = sub_asm.split("\n")
 
-        # Get reference index
-        ref_insn = insn_ref_array[insn_index]
-        ref_insn_split = ref_insn.split()
-        decoder_index = get_index(ref_insn_split[0])
+            # Get reference index
+            ref_insn = insn_ref_array[insn_index]
+            ref_insn_split = ref_insn.split()
+            decoder_index = get_index(ref_insn_split[0])
 
-        temp_lut_content = []
+            temp_lut_content = []
 
-        for line_index, line in enumerate(sub_asm_split):
+            for line_index, line in enumerate(sub_asm_split):
 
-            stop = (line_index == len(sub_asm_split) - 1)
+                stop = (line_index == len(sub_asm_split) - 1)
 
-            # Clean input
-            line = remove_whitespace(line)
-            ref_insn = remove_whitespace(ref_insn)
+                # Clean input
+                line = remove_whitespace(line)
+                ref_insn = remove_whitespace(ref_insn)
 
-            try:
-                lut_word = get_lut_line(line, ref_insn, stop)
-            except ValueError:
-                logging.error("[%d:%d:%d] Error while parsing substitution: %s", lut_index, insn_index, line_index, line)
-                exit()
+                try:
+                    lut_word = get_lut_line(line, ref_insn, stop)
+                except ValueError:
+                    logging.error("[%d:%d:%d] Error while parsing substitution: %s", lut_index, insn_index, line_index, line)
+                    exit()
 
-            temp_lut_content += lut_word
+                temp_lut_content += lut_word
 
-        # Add substitution to decoder
-        match_pointer = is_sublist(temp_lut_content, lut_content)
-        if(match_pointer >= 0 and SHARED_POINTERS_ENABLED):
-            logging.debug("[%d:%d] Substituion found at LUT index %d", lut_index, insn_index, match_pointer)
-
-            # Add reference to decoder
-            decoder_word = [decoder_index, match_pointer]
-            lut_decoder.append(decoder_word)
-        else:
             # Add substitution to decoder
-            decoder_word = [decoder_index, lut_pointer]
-            lut_decoder.append(decoder_word)
+            match_pointer = is_sublist(temp_lut_content, lut_content)
+            if(match_pointer >= 0 and SHARED_POINTERS_ENABLED):
+                logging.debug("[%d:%d] Substituion found at LUT index %d", lut_index, insn_index, match_pointer)
 
-            # Add substitution to LUT
-            lut_content += temp_lut_content
-            lut_pointer += len(temp_lut_content)
+                # Add reference to decoder
+                decoder_word = [decoder_index, match_pointer]
+                lut_decoder.append(decoder_word)
+            else:
+                # Add substitution to decoder
+                decoder_word = [decoder_index, lut_pointer]
+                lut_decoder.append(decoder_word)
 
-    # Write decoder content
-    for lut_decoder_word in lut_decoder:
-        out_string = "`OBF_IGU_WIDTH'd{:}: lut{:}_pointer = `OBF_LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_index, lut_decoder_word[1])
-        f.write(out_string)
+                # Add substitution to LUT
+                lut_content += temp_lut_content
+                lut_pointer += len(temp_lut_content)
 
-    # Write lut content
-    for lut_word_index, lut_word in enumerate(lut_content):
-        out_string = "lut{:}[{:}] = 16'b{:};\n".format(lut_index, lut_word_index, lut_word)
-        f.write(out_string)
+        # Write decoder content
+        for lut_decoder_word in lut_decoder:
+            out_string = "`OBF_IGU_WIDTH'd{:}: lut{:}_pointer = `OBF_LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_index, lut_decoder_word[1])
+            f.write(out_string)
 
-f.close()
+        # Write lut content
+        for lut_word_index, lut_word in enumerate(lut_content):
+            out_string = "lut{:}[{:}] = 16'b{:};\n".format(lut_index, lut_word_index, lut_word)
+            f.write(out_string)
+
+    f.close()
+
+
+if __name__ == "__main__":
+    main()
