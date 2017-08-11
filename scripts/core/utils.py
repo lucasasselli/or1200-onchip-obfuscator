@@ -1,5 +1,5 @@
 import os
-import csvkit
+import xlrd
 import logging
 import logging.handlers
 
@@ -14,43 +14,39 @@ def get_root_path():
     return os.path.join(os.path.dirname(__file__), common.DIR_ROOT)
 
 
-def load_csv(f, skip_header):
+def load_sub_table(f, skip_header=True):
 
     insn_ref_array = []
     insn_sub_table = []
 
-    try:
-        reader = csvkit.reader(f)
-        i = 0
-        for row in reader:
+    wb = xlrd.open_workbook(f)
+    sh = wb.sheet_by_index(0)
 
-            # Skip header if required
-            if skip_header == 1 and i == 0:
-                i += 1
-                continue
+    for row_index in range(sh.nrows):
 
-            insn_ref_field = row[0]
-            insn_ref_array.append(insn_ref_field)
+        # Skip header
+        if skip_header and row_index == 0:
+            continue
 
-            insn_sub_array = []
+        row_values = sh.row_values(row_index)
 
-            for j in range(1, len(row)):
+        insn_ref_field = row_values[0]
+        insn_ref_array.append(insn_ref_field)
 
-                insn_sub_field = row[j]
+        insn_sub_array = []
 
-                # Skip empty rows
-                if not insn_sub_field:
-                    break
+        for j in range(1, len(row_values)):
 
-                insn_sub = common.InsnSub(insn_ref_field, insn_sub_field)
+            insn_sub_field = row_values[j]
 
-                insn_sub_array.append(insn_sub)
+            # Skip empty rows
+            if not insn_sub_field:
+                break
 
-            insn_sub_table.append(insn_sub_array)
-            i += 1
+            insn_sub = common.InsnSub(insn_ref_field, insn_sub_field)
+            insn_sub_array.append(insn_sub)
 
-    finally:
-        f.close()
+        insn_sub_table.append(insn_sub_array)
 
     return insn_ref_array, insn_sub_table
 

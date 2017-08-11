@@ -114,6 +114,8 @@ OR1200_RFWBOP_FPU = "100"
 
 def parse(insn):
 
+    word = None
+
     for op in insn.split():
         if "l." in op:
             word = decode(op)
@@ -145,6 +147,7 @@ def get_opcode(insn):
             insn == "l.muld" or
             insn == "l.muldu" or
             insn == "l.mulu" or
+            insn == "l.ror" or
             insn == "l.or" or
             insn == "l.sll" or
             insn == "l.sra" or
@@ -672,6 +675,8 @@ def get_aop(insn):
         return OR1200_ALUOP_MULU
     if insn == "l.or":
         return OR1200_ALUOP_OR
+    if insn == "l.ror":
+        return OR1200_ALUOP_SHROT
     if insn == "l.sll":
         return OR1200_ALUOP_SHROT
     if insn == "l.sra":

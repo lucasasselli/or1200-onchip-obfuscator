@@ -34,6 +34,7 @@ usage = sim
 iverilog_options = -DSIM
 
 [verilator]
+depend = verilator_tb_utils
 verilator_options = -Wno-fatal --trace
 tb_toplevel   = bench/verilator/tb.cpp
 top_module    = orpsoc_top

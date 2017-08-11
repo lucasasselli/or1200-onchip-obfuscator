@@ -19,7 +19,10 @@ PATH_WORK = "/tmp/obf-temp"
 
 FILE_SIM_RESULT = "tb-general.log"
 
-OPERAND_SUBS = [("rA", "r3"), ("rB", "r4"), ("rD", "r31"), ("I", "8"), ("N", "8"), ("K", "8"), ("L", "8")]
+OPERAND_REXP = ["rA", "rB", "rD", "I|N|K", "L"]
+OPERAND_SUBS = [("r3", "r4", "r31", "8", "8"),
+                ("r0", "r4", "r31", "8", "8"),
+                ("r3", "r0", "r31", "8", "8")]
 
 
 class TestFile:
@@ -30,7 +33,7 @@ class TestFile:
         self.output_name = output_name
         self.code = code
 
-    def write(self):
+    def write(self, operand_index):
         # Read in the file
         res_path = utils.get_res_path()
 
@@ -42,11 +45,12 @@ class TestFile:
 
         if self.has_code:
             # Swap placeholder operands with real ones
-            for i in range(0, len(OPERAND_SUBS)):
-                self.code = self.code.replace(OPERAND_SUBS[i][0], OPERAND_SUBS[i][1])
+            code = self.code
+            for rexp_index, rexp in enumerate(OPERAND_REXP):
+                code = re.sub(rexp, OPERAND_SUBS[operand_index][rexp_index], code)
 
             # Replace the target string
-            filedata = filedata.replace("//||//", self.code)
+            filedata = filedata.replace("//||//", code)
 
         # Write the file out again
         with open(output_path, 'w') as file:
@@ -74,7 +78,7 @@ class Tester:
 
         return result
 
-    def __simulate(self, test_file_array):
+    def __simulate(self, test_file_array, operand_index=0):
 
         res_path = utils.get_res_path()
         root_path = utils.get_root_path()
@@ -91,7 +95,7 @@ class Tester:
 
         # Write test files
         for test_file in test_file_array:
-            test_file.write()
+            test_file.write(operand_index)
 
         # Compile test
         if self.__run_command("make all -C " + work_test_path) > 0:
@@ -127,6 +131,8 @@ class Tester:
     # Checks if the substitution produces the same result of the reference
     def run_result_test(self):
 
+        logging.debug("Running result test...")
+
         # If the instruction has no destiniation register, skip it
         if "rD" not in self.sub_obj.insn_sub:
             logging.debug("(Result test) Substitution has no destination register: skipping...")
@@ -138,40 +144,47 @@ class Tester:
         test_file_array.append(TestFile("reg_result_test_ref_asm", self.sub_obj.insn_ref, "test_ref.S"))
         test_file_array.append(TestFile("reg_result_test_sub_asm", self.sub_obj.insn_sub, "test_sub.S"))
 
-        result = self.__simulate(test_file_array)
+        for opset_index in range(0, len(OPERAND_SUBS)):
 
-        if result:
-            # Parse exit code
-            try:
-                sim_exit_code = int(self.result_array[-1], 16)
-            except ValueError:
-                logging.error("(Result test) Unable to parse exit code")
-                return False
+            logging.debug("Testing operand set %d", opset_index)
+            result = self.__simulate(test_file_array, opset_index)
 
-            if sim_exit_code != 1:
-                if len(self.result_array) < 5:
-                    logging.error("(Result test) Bad output")
+            if result:
+                # Parse exit code
+                try:
+                    sim_exit_code = int(self.result_array[-1], 16)
+                except ValueError:
+                    logging.error("(Result test) Unable to parse exit code")
                     return False
 
-                # Parse simulation output
-                error_iteration = int(self.result_array[0], 16)
-                error_operand1 = self.result_array[1]
-                error_operand2 = self.result_array[2]
-                error_result_ref = self.result_array[3]
-                error_result_sub = self.result_array[4]
+                if sim_exit_code != 1:
+                    if len(self.result_array) < 5:
+                        logging.error("(Result test) Bad output")
+                        return False
 
-                logging.error("(Result test) Mismatch at iteration %d:\nI=%s,%s\nR=%s\nS=%s",
-                              error_iteration, error_operand1, error_operand2, error_result_ref, error_result_sub)
+                    # Parse simulation output
+                    error_iteration = int(self.result_array[0], 16)
+                    error_operand1 = self.result_array[1]
+                    error_operand2 = self.result_array[2]
+                    error_result_ref = self.result_array[3]
+                    error_result_sub = self.result_array[4]
 
+                    logging.error("(Result test) Mismatch at iteration %d:\nI=%s,%s\nR=%s\nS=%s",
+                                  error_iteration, error_operand1, error_operand2, error_result_ref, error_result_sub)
+
+                    return False
+
+                logging.debug("Test passed with operand set %d!", opset_index)
+            else:
+                # Simulation failed
+                logging.error("(Result test) Unable to deploy test")
                 return False
 
-            return True
-        else:
-            # Simulation failed
-            logging.error("(Result test) Unable to deploy test")
-            return False
+        return True
 
     def run_sr_test(self):
+
+        logging.debug("Running SR test...")
 
         test_file_array = []
         test_file_array.append(TestFile("reg_sr_main_c", None, "main.c", False))

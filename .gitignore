@@ -18,14 +18,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Scripts
-scripts/core/test/*.c
-scripts/core/test/*.S
-
 ##################################################
 # Fusesoc
 ##################################################
 
 *transcript
 build/*
-scripts/build/*

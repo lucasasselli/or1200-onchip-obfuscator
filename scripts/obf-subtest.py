@@ -61,8 +61,7 @@ def main():
     utils.init_logger(args.out, debug=args.debug)
 
     # Read table
-    f = open(args.file, 'rt')
-    insn_ref_array, insn_sub_table = utils.load_csv(f, 1)
+    insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
 
     # Execution mode
     if(args.i >= 0):

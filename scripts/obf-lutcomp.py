@@ -453,10 +453,9 @@ def main():
     utils.init_logger(debug=args.debug, log_to_file=False)
 
     # Read table
-    f = open(args.file, 'rt')
-    insn_ref_array, insn_sub_table = utils.load_csv(f, 1)
+    insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
 
-    # Output file
+    # Output fjile
     f = open(args.out, 'w')
 
     # Compile
