@@ -127,11 +127,11 @@ module or1200_monitor;
 	 $fdisplay(flookup, "Instruction %d: %t", insns, $time);
  `endif
 	 if(exception)
-	   $fwrite(fexe, "\nEXECUTED(%d): %h:  %h  (exception)", insns,
+	   $fwrite(fexe, "\nEXECUTED: %h:  %h  (exception)",
 		   `OR1200_TOP.`CPU_cpu.`CPU_except.ex_pc,
 		   `OR1200_TOP.`CPU_cpu.`CPU_ctrl.ex_insn);
 	 else
-	   $fwrite(fexe, "\nEXECUTED(%d): %h:  %h", insns,
+	   $fwrite(fexe, "\nEXECUTED: %h:  %h",
 		   `OR1200_TOP.`CPU_cpu.`CPU_except.wb_pc,
 		   `OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn);
  `ifdef OR1200_MONITOR_EXEC_LOG_DISASSEMBLY

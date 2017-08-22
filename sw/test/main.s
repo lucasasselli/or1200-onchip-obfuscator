@@ -4,13 +4,10 @@
     .org 0x100 
 _start: 
     l.movhi r0, 0
-    l.movhi r1, 0
     l.movhi r2, 0
-    l.xori r1, r1, 15
-    l.xori r2, r2, 10
-    l.nop
-    l.nop
-    l.nop
-    l.addi r3, r2, 15
-    l.nop
+    l.addi  r1,r0,1
+loop:
+    l.sfnei r2, 6
+    l.bf loop
+    l.add r2,r2,r1
     l.nop 0xc

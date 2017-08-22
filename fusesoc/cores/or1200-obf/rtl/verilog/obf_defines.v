@@ -1,5 +1,5 @@
 // Main
-`define OBF_PPC_WIDTH 2
+`define OBF_PPC_WIDTH 4
 `define OBF_CMD_WIDTH 16
 `define OBF_KEY_WIDTH 2
 

@@ -295,7 +295,7 @@ def get_lut_line(line, ref, stop):
     line_find = re.findall(r"l\.", line)
 
     if len(line_find) == 0:
-        logging.error("Unable to find a valid instruction: %s", line)
+        logging.error("Unable to identify instruction: %s", line)
         raise ValueError
 
     if len(line_find) > 1:

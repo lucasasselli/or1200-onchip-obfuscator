@@ -733,8 +733,7 @@ def get_extra_opcode(insn):
         # TODO
         pass
     if insn == "l.mulu":
-        # TODO
-        pass
+        return "11001011"
     if insn == "l.or":
         return "00000100"
     if insn == "l.sll":

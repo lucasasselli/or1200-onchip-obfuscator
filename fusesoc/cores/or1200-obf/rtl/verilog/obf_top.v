@@ -1,3 +1,9 @@
+/*
+    TODO:
+        - F-type
+        - S-type
+*/
+
 // synopsys translate_off
 `include "timescale.v"
 // synopsys translate_on
@@ -35,13 +41,11 @@ output reg io_stall;
 output reg [31:0] io_insn;
 output reg [31:0] io_pc;
 
-wire obf_en = 1'b1; // Global obfuscator enable
+wire obf_en = 1'b0; // Global obfuscator enable
 wire obf_bypass;
 wire obf_complete;
 wire obf_init;
-wire obf_rst_hard = id_flushpipe | no_more_dslot;
-wire obf_rst_soft = ex_branch_taken;
-
+wire obf_rst;
 wire [`OBF_KEY_WIDTH-1:0] key = `OBF_KEY_WIDTH'd0;
 
 //////////////////////////////////////////////////
@@ -51,7 +55,7 @@ wire [`OBF_KEY_WIDTH-1:0] key = `OBF_KEY_WIDTH'd0;
 reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
 
 wire ppc_en = !obf_bypass & !id_freeze;
-wire ppc_rst = obf_complete;
+wire ppc_rst = obf_complete | obf_rst;
 wire ppc_skip;
 
 assign obf_init = (ppc_i == 0);
@@ -108,7 +112,6 @@ end
 
 
 wire [`OBF_IGU_WIDTH-1:0] igu_i;
-wire [`OBF_LUT_ADDR_WIDTH-1:0] lut_addr;
 wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_sub;
 wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_imm;
 
@@ -130,11 +133,6 @@ obf_lut obf_lut_i(
 //////////////////////////////////////////////////
 // OBFUSCATED INSTRUCTION GENERATION
 //////////////////////////////////////////////////
-/*
-    TODO:
-        - F-type
-        - S-type
-*/
 
 reg [31:0] obf_insn; // Obfuscated instruction
 
@@ -211,41 +209,72 @@ begin
        `OBF_INSN_TYPE_I: obf_insn <= {f_out_OPC0, f_out_D, f_out_A, f_out_I};
        `OBF_INSN_TYPE_M: obf_insn <= {f_out_OPC0, f_out_I[15:11], f_out_A, f_out_B, f_out_I[10:0]};
        `OBF_INSN_TYPE_N: obf_insn <= saved_insn;
-       `OBF_INSN_TYPE_S: obf_insn <= {`OR1200_OR32_NOP, 26'h041_0001};
     endcase
 end
 
 assign obf_bypass = !obf_en | (obf_init & (if_stall)); 
 assign obf_complete = sub_last;
-assign ppc_skip = (f_in_type == `OBF_INSN_TYPE_I || f_in_type == `OBF_INSN_TYPE_M) ? sub_cmd[5] : 1'b0;
+assign ppc_skip = (sub_type == `OBF_INSN_TYPE_I || sub_type == `OBF_INSN_TYPE_M) ? sub_cmd[5] : 1'b0;
+
+//////////////////////////////////////////////////
+// BRANCH DSLOT
+//////////////////////////////////////////////////
+
+reg branch_issued;
+wire io_void = (io_insn[31:26] == `OR1200_OR32_NOP) & io_insn[16]; 
+
+always @(*) begin
+    if(!id_freeze) begin
+        if(
+            io_insn[31:26] == `OR1200_OR32_J ||
+            io_insn[31:26] == `OR1200_OR32_JAL ||
+            io_insn[31:26] == `OR1200_OR32_JR ||
+            io_insn[31:26] == `OR1200_OR32_JALR ||
+            io_insn[31:26] == `OR1200_OR32_BF ||
+            io_insn[31:26] == `OR1200_OR32_BNF ||
+            io_insn[31:26] == `OR1200_OR32_RFE
+        ) begin
+            branch_issued <= 1'b1;
+        end
+        else if(!io_void) begin
+            branch_issued <= 1'b0;
+        end
+        else begin
+            branch_issued <= branch_issued;
+        end
+    end
+    else begin
+        branch_issued <= branch_issued;
+    end
+end
 
 //////////////////////////////////////////////////
 // OUTPUTS
 //////////////////////////////////////////////////
-// TODO The ex_branch_taken as is doesn't make no sense
+
+reg obf_flushable;
+assign obf_rst = (id_flushpipe | ex_branch_taken) & obf_flushable & !branch_issued;
 
 // Instruction output
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
-    if (rst == `OR1200_RST_VALUE) begin
+    if (rst == `OR1200_RST_VALUE | obf_rst) begin
         // Reset
         io_insn <= {`OR1200_OR32_NOP, 26'h041_0000};
+        obf_flushable <= 1'b1;
     end
     else begin
-        if(obf_rst_hard & obf_init) begin
-            io_insn <= {`OR1200_OR32_NOP, 26'h041_0000};
-        end
-        else if (id_freeze) begin
+        if (id_freeze) begin
             io_insn <= io_insn; // Re-latch old value
-        end
-        else if (obf_rst_soft & obf_init) begin
-            io_insn <= {`OR1200_OR32_NOP, 26'h041_0000}; 
+            obf_flushable <= obf_flushable;
         end
         else if (obf_bypass) begin
             io_insn <= if_insn; // Obfuscator disabled
+            obf_flushable <= 1'b1;
         end
         else begin
             io_insn <= obf_insn; // Obfuscator active
+            obf_flushable <= obf_init;
         end
     end
 end
@@ -260,7 +289,7 @@ begin
     else begin
         if (id_freeze)
             io_stall <= io_stall;
-        else if (obf_bypass)
+        else if (obf_bypass | obf_rst)
             io_stall <= 1'b0;
         else
             io_stall <= !obf_complete;
