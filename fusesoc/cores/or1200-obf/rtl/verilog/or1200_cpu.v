@@ -343,6 +343,8 @@ wire				abort_mvspr;
 wire	[31:0]			io_insn;
 wire                            io_stall;
 wire	[31:0]			io_pc;
+wire                            if_stall_req;
+wire                            io_no_more_dslot;
 
 //
 // Send exceptions to Debug Unit
@@ -450,7 +452,7 @@ or1200_genpc #(.boot_adr(boot_adr)) or1200_genpc(
 	.spr_pc_we(pc_we),
 	.genpc_refetch(genpc_refetch),
 	.genpc_freeze(genpc_freeze),
-	.no_more_dslot(no_more_dslot),
+	.no_more_dslot(io_no_more_dslot),
 	.lsu_stall(lsu_stall),
 	.du_flush_pipe(du_flush_pipe),
 	.spr_dat_npc(spr_dat_npc)
@@ -474,7 +476,7 @@ or1200_if or1200_if(
 	.saving_if_insn(saving_if_insn),
 	.if_flushpipe(if_flushpipe),
 	.if_stall(if_stall),
-	.no_more_dslot(no_more_dslot),
+	.no_more_dslot(io_no_more_dslot),
 	.genpc_refetch(genpc_refetch),
 	.rfe(rfe),
 	.except_itlbmiss(except_itlbmiss),
@@ -492,12 +494,14 @@ obf_top obf_top(
         .if_pc(if_pc),
         .if_stall(if_stall),
         .id_freeze(id_freeze),
-        .no_more_dslot(no_more_dslot),
+        .id_void(id_void),
         .ex_branch_taken(ex_branch_taken),
         .id_flushpipe(id_flushpipe),
-        .io_stall(io_stall),
         .io_insn(io_insn),
-        .io_pc(io_pc)
+        .io_pc(io_pc),
+        .io_stall(io_stall),
+        .io_no_more_dslot(io_no_more_dslot),
+        .if_stall_req(if_stall_req)
 );
 
 //
@@ -828,7 +832,7 @@ or1200_freeze or1200_freeze(
 	.flushpipe(wb_flushpipe),
 	.extend_flush(extend_flush),
 	.lsu_stall(lsu_stall),
-	.if_stall(if_stall),
+	.io_stall(io_stall),
 	.lsu_unstall(lsu_unstall),
 	.force_dslot_fetch(force_dslot_fetch),
 	.abort_ex(abort_ex),
@@ -842,7 +846,7 @@ or1200_freeze or1200_freeze(
 	.wb_freeze(wb_freeze),
 	.icpu_ack_i(icpu_ack_i),
 	.icpu_err_i(icpu_err_i),
-        .io_stall(io_stall)
+        .if_stall_req(if_stall_req)
 );
 
 //
@@ -875,7 +879,7 @@ or1200_except or1200_except(
         .id_freeze(id_freeze),
         .ex_freeze(ex_freeze),
         .wb_freeze(wb_freeze),
-	.if_stall(if_stall),
+	.if_stall(io_stall),
 	.if_pc(io_pc), // Wired to obf
 	.id_pc(id_pc),
 	.ex_pc(ex_pc),

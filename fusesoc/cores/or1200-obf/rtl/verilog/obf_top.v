@@ -17,10 +17,10 @@ module obf_top(
     clk, rst,
 
     // Inputs
-    if_insn, if_pc, id_freeze, if_stall, id_flushpipe, no_more_dslot, ex_branch_taken,
+    if_insn, if_pc, id_freeze, if_stall, id_flushpipe, ex_branch_taken, id_void,
 
     // Outputs
-    io_stall, io_insn, io_pc
+    if_stall_req, io_insn, io_pc, io_stall, io_no_more_dslot
 );
 
 
@@ -34,19 +34,24 @@ input [31:0] if_insn;
 input [31:0] if_pc;
 input if_stall;
 input id_freeze;
+input id_void;
 input id_flushpipe;
-input no_more_dslot;
 input ex_branch_taken;
-output reg io_stall;
-output reg [31:0] io_insn;
+output reg if_stall_req;
+output [31:0] io_insn;
 output reg [31:0] io_pc;
+output reg io_stall;
+output reg io_no_more_dslot;
 
-wire obf_en = 1'b0; // Global obfuscator enable
+wire obf_en = 1'b1; // Global obfuscator enable
 wire obf_bypass;
 wire obf_complete;
 wire obf_init;
 wire obf_rst;
 wire [`OBF_KEY_WIDTH-1:0] key = `OBF_KEY_WIDTH'd0;
+
+
+wire real_id_freeze = id_freeze & !io_stall;
 
 //////////////////////////////////////////////////
 // PSEUDO PROGRAM COUNTER (PPC)
@@ -54,7 +59,7 @@ wire [`OBF_KEY_WIDTH-1:0] key = `OBF_KEY_WIDTH'd0;
 
 reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
 
-wire ppc_en = !obf_bypass & !id_freeze;
+wire ppc_en = !obf_bypass & !real_id_freeze;
 wire ppc_rst = obf_complete | obf_rst;
 wire ppc_skip;
 
@@ -212,39 +217,45 @@ begin
     endcase
 end
 
-assign obf_bypass = !obf_en | (obf_init & (if_stall)); 
-assign obf_complete = sub_last;
 assign ppc_skip = (sub_type == `OBF_INSN_TYPE_I || sub_type == `OBF_INSN_TYPE_M) ? sub_cmd[5] : 1'b0;
+
+assign obf_bypass = !obf_en | (obf_init & (if_stall)); // TODO Can void be used instead?
+assign obf_complete = sub_last & !real_id_freeze;
 
 //////////////////////////////////////////////////
 // BRANCH DSLOT
 //////////////////////////////////////////////////
 
-reg branch_issued;
-wire io_void = (io_insn[31:26] == `OR1200_OR32_NOP) & io_insn[16]; 
+reg purge;
+reg [31:0] io_insn_reg;
+wire io_void = (io_insn_reg[31:26] == `OR1200_OR32_NOP) & io_insn_reg[16]; 
 
 always @(*) begin
-    if(!id_freeze) begin
-        if(
-            io_insn[31:26] == `OR1200_OR32_J ||
-            io_insn[31:26] == `OR1200_OR32_JAL ||
-            io_insn[31:26] == `OR1200_OR32_JR ||
-            io_insn[31:26] == `OR1200_OR32_JALR ||
-            io_insn[31:26] == `OR1200_OR32_BF ||
-            io_insn[31:26] == `OR1200_OR32_BNF ||
-            io_insn[31:26] == `OR1200_OR32_RFE
-        ) begin
-            branch_issued <= 1'b1;
+    if(ex_branch_taken) begin
+        if(io_void & id_void) begin
+            // dslot not yet fetched
+            io_no_more_dslot <= 1'b0;
+            purge <= 1'b0;
         end
-        else if(!io_void) begin
-            branch_issued <= 1'b0;
+        else if(!io_void & id_void) begin
+            // dslot latched by obfuscator stage
+            io_no_more_dslot <= 1'b1;
+            purge <= 1'b0;
+        end
+        else if(io_void & !id_void) begin
+            // dslot latched by decode stage
+            io_no_more_dslot <= 1'b1;
+            purge <= 1'b0;
         end
         else begin
-            branch_issued <= branch_issued;
+            // dslot latched by decode stage
+            io_no_more_dslot <= 1'b1;
+            purge <= 1'b1;
         end
     end
     else begin
-        branch_issued <= branch_issued;
+        io_no_more_dslot <= 1'b0;
+        purge <= 1'b0;
     end
 end
 
@@ -253,27 +264,31 @@ end
 //////////////////////////////////////////////////
 
 reg obf_flushable;
-assign obf_rst = (id_flushpipe | ex_branch_taken) & obf_flushable & !branch_issued;
+assign obf_rst = purge & obf_flushable; // TODO: flushpipe
+assign io_insn = purge & obf_flushable ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
 
 // Instruction output
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
     if (rst == `OR1200_RST_VALUE | obf_rst) begin
         // Reset
-        io_insn <= {`OR1200_OR32_NOP, 26'h041_0000};
+        io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
         obf_flushable <= 1'b1;
     end
     else begin
-        if (id_freeze) begin
-            io_insn <= io_insn; // Re-latch old value
+        if (real_id_freeze) begin
+            // id stage frozen
+            io_insn_reg <= io_insn;
             obf_flushable <= obf_flushable;
         end
         else if (obf_bypass) begin
-            io_insn <= if_insn; // Obfuscator disabled
+            // Obfuscator disabled or if stage stalling
+            io_insn_reg <= if_insn;
             obf_flushable <= 1'b1;
         end
         else begin
-            io_insn <= obf_insn; // Obfuscator active
+            // Obfusctor running
+            io_insn_reg <= obf_insn;
             obf_flushable <= obf_init;
         end
     end
@@ -284,15 +299,38 @@ always @(*)
 begin
     if (rst == `OR1200_RST_VALUE) begin
         // Reset
+        if_stall_req <= 1'b0;
+    end
+    else begin
+        if(if_stall) begin
+            // If fetch stage is stalling no action is required
+            if_stall_req <= 1'b0;
+        end
+        else begin
+            if (obf_bypass | obf_rst)
+                // Obfuscator disabled or if stage stalling
+                if_stall_req <= real_id_freeze;
+            else
+                // Obfuscator running
+                if_stall_req <= !obf_complete;
+            end
+        end
+    end
+
+// Obfuscator stall
+always @(posedge clk or `OR1200_RST_EVENT rst) 
+begin
+    if (rst == `OR1200_RST_VALUE) begin
+        // Reset
         io_stall <= 1'b0;
     end
     else begin
-        if (id_freeze)
-            io_stall <= io_stall;
-        else if (obf_bypass | obf_rst)
+        if(real_id_freeze)
+            // If id stage is frozen there is no need to notify stall
             io_stall <= 1'b0;
         else
-            io_stall <= !obf_complete;
+            // Other
+            io_stall <= if_stall;
         end
     end
 
@@ -304,7 +342,7 @@ begin
         io_pc <= 32'd0;
     end
     else begin
-        if(id_freeze)
+        if(real_id_freeze)
             io_pc <= io_pc;
         else
             io_pc <= if_pc;
