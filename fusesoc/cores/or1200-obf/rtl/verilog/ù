@@ -341,7 +341,7 @@ begin
             io_stall <= 1'b0;
         else if(!obf_bypass)
             // If obfuscator is running no stall is issued
-            io_stall <= 1'b0;
+            io_stall <= 1'b0r
         else
             // Other
             io_stall <= if_stall;

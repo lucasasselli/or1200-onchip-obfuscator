@@ -114,11 +114,11 @@ end
 // Address generation
 always @(index) begin
     case(index)
-        `OBF_IGU_WIDTH'd27: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd5; 
-        /* `OBF_IGU_WIDTH'd29: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd14; */
-        /* `OBF_IGU_WIDTH'd25: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd42; */
+        `OBF_IGU_WIDTH'd27: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd5; // Ok without icache
+        `OBF_IGU_WIDTH'd29: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd14; // Ok without icache
+        `OBF_IGU_WIDTH'd25: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd42; // Ok without icache
         /* `OBF_IGU_WIDTH'd21: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd45; // Unknown opcode 0x22 */
-        /* `OBF_IGU_WIDTH'd30: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd50; */
+        /* `OBF_IGU_WIDTH'd30: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd50; // Error */
         /* `OBF_IGU_WIDTH'd64: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd1;  // Ok2 */
         /* `OBF_IGU_WIDTH'd33: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd46; // Ok2 */
         /* `OBF_IGU_WIDTH'd65: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd3; // Ok */
@@ -151,7 +151,7 @@ always @(index) begin
         /* `OBF_IGU_WIDTH'd66: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd81; // Ok */
         /* `OBF_IGU_WIDTH'd55: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd46; // Ok */
         /* `OBF_IGU_WIDTH'd69: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd83; // Ok */
-        /* `OBF_IGU_WIDTH'd31: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd85; // Ok */
+        /* `OBF_IGU_WIDTH'd31: lut0_pointer = `OBF_LUT_ADDR_WIDTH'd85; // Error in mibench/automotive/basicmath */
         default:            lut0_pointer = `OBF_LUT_ADDR_WIDTH'd0;  // This always works
     endcase
 end
