@@ -1,8 +1,8 @@
 #!/bin/bash
 SIMULATOR=modelsim
 TARGET_SYS=or1200-obf-generic
-ELF_PATH=hello
-ELF_FILE=main.elf
+ELF_PATH=or1k-mibench/automotive/basicmath
+ELF_FILE=basicmath_large
 
 # Compile target software
 make -C sw/$ELF_PATH

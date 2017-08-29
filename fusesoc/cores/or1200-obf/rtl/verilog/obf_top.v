@@ -1,9 +1,3 @@
-/*
-    TODO:
-        - F-type
-        - S-type
-*/
-
 // synopsys translate_off
 `include "timescale.v"
 // synopsys translate_on
