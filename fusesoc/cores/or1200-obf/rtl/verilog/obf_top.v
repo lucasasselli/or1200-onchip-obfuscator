@@ -3,8 +3,8 @@
 // synopsys translate_on
 `include "or1200_defines.v"
 `include "obf_defines.v"
-`include "obf_igu.v"
-`include "obf_lut.v"
+/* `include "obf_igu.v" */
+/* `include "obf_lut.v" */
 
 module obf_top(
     // Clock and Reset

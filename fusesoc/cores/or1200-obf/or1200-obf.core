@@ -4,7 +4,6 @@ description = OpenRISC 1200 CPU with obfuscator
 
 [verilog]
 src_files =
- rtl/verilog/obf_defines.v[is_include_file]
  rtl/verilog/obf_top.v
  rtl/verilog/obf_igu.v
  rtl/verilog/obf_lut.v
@@ -86,6 +85,7 @@ src_files =
  rtl/verilog/or1200_wbmux.v
  rtl/verilog/or1200_xcv_ram32x8d.v
  rtl/verilog/timescale.v
+include_files = rtl/verilog/obf_defines.v 
 tb_src_files =  bench/verilog/or1200_monitor.v
 tb_include_files = bench/verilog/or1200_monitor_defines.v
 

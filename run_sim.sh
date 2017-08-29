@@ -1,15 +1,12 @@
 #!/bin/bash
-SIMULATOR=modelsim
+DIR=$(pwd)
+SIMULATOR=verilator
 TARGET_SYS=or1200-obf-generic
-ELF_PATH=or1k-mibench/automotive/basicmath
+ELF_PATH=$DIR/sw/or1k-mibench/automotive/basicmath
 ELF_FILE=basicmath_large
 
 # Compile target software
-make -C sw/$ELF_PATH
+make -C $ELF_PATH
 
-# Build target system
-fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR --build-only $TARGET_SYS --elf-load sw/$ELF_PATH/$ELF_FILE
-
-# Run simulation
-cd build/${TARGET_SYS}_0/sim-$SIMULATOR
-vsim -do fusesoc_run.tcl
+# Start simulation
+fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_PATH/$ELF_FILE

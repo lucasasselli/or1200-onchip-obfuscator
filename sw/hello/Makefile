@@ -1,4 +1,4 @@
-CFLAGS=-mboard=de0_nano -DDE0_NANO
+CFLAGS=-mboard=or1ksim-uart
 
 all: main.elf main.lst
 
