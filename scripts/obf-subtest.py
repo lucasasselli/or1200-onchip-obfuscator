@@ -58,11 +58,11 @@ def main():
     parser.add_argument("file", type=str, help="input file")
     parser.add_argument("-i", type=int, default=-1, help="instruction to test")
     parser.add_argument("-o", "--out", type=str, default="subtest.log", help="log file")
-    parser.add_argument("-s", "--score-only", action='store_true', help="compute only substitution scores")
+    parser.add_argument("-s", "--scoreonly", action='store_true', help="compute only substitution scores")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 
-    score_only = args.s
+    score_only = args.scoreonly
 
     # Logger
     utils.init_logger(args.out, debug=args.debug)

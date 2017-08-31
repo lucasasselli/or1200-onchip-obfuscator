@@ -20,9 +20,9 @@ PATH_WORK = "/tmp/obf-temp"
 FILE_SIM_RESULT = "tb-general.log"
 
 OPERAND_REXP = ["rA", "rB", "rD", "I|N|K", "L"]
-OPERAND_SUBS = [("r3", "r4", "r31", "8", "8"),
-                ("r0", "r4", "r31", "8", "8"),
-                ("r3", "r0", "r31", "8", "8")]
+OPERAND_SUBS = [("r3", "r4", "r31", "0xffff", "8"),
+                ("r0", "r4", "r31", "0xffff", "8"),
+                ("r3", "r0", "r31", "0xffff", "8")]
 
 
 class TestFile:

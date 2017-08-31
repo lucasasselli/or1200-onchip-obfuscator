@@ -1498,6 +1498,11 @@ end
 		$fwrite(finsn,"l.lwz r%0d,0x%0h(r%0d)",rD_num,imm_16bit,rA_num);
 	     end
 
+	   `OR1200_OR32_LWS:
+	     begin
+		$fwrite(finsn,"l.lws r%0d,0x%0h(r%0d)",rD_num,imm_16bit,rA_num);
+	     end
+
 	   `OR1200_OR32_LBZ:
 	     begin
 		$fwrite(finsn,"l.lbz r%0d,0x%0h(r%0d)",rD_num,imm_16bit,rA_num);

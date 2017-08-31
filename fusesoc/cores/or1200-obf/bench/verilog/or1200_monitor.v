@@ -42,7 +42,7 @@
 
 module or1200_monitor;
 
-   parameter TEST_NAME_STRING = "unnamed";
+   parameter TEST_NAME_STRING = "tb";
    parameter LOG_DIR          = ".";
 
    integer fexe;
@@ -58,6 +58,7 @@ module or1200_monitor;
 `endif
    integer    r3;
    integer    insns;
+   integer    sr;
 
 
    //
@@ -126,11 +127,11 @@ module or1200_monitor;
 	 $fdisplay(flookup, "Instruction %d: %t", insns, $time);
  `endif
 	 if(exception)
-	   $fwrite(fexe, "\nEXECUTED: %h:  %h  (exception)", 
+	   $fwrite(fexe, "\nEXECUTED: %h:  %h  (exception)",
 		   `OR1200_TOP.`CPU_cpu.`CPU_except.ex_pc,
 		   `OR1200_TOP.`CPU_cpu.`CPU_ctrl.ex_insn);
 	 else
-	   $fwrite(fexe, "\nEXECUTED: %h:  %h", 
+	   $fwrite(fexe, "\nEXECUTED: %h:  %h",
 		   `OR1200_TOP.`CPU_cpu.`CPU_except.wb_pc,
 		   `OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn);
  `ifdef OR1200_MONITOR_EXEC_LOG_DISASSEMBLY
@@ -346,6 +347,11 @@ module or1200_monitor;
 	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0002) begin
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop report (0x%h)", $time, r3);
+        // simulation reports_sr (l.nop d)
+        if (`OR1200_TOP.or1200_cpu.or1200_ctrl.wb_insn == 32'h1500_000d) begin 
+            sr = `OR1200_TOP.or1200_cpu.or1200_sprs.sr; // TODO do something better
+            $fdisplay(fgeneral, "%t: l.nop sr     (%h)", $time, sr);
+        end
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
 	   // Note that the 'expect' scripts in or1ksim's test suite look for strings
 	   // like "report(0x7ffffffe);", therefore something like "report (0x7ffffffe);"
@@ -1490,6 +1496,11 @@ end
 	   `OR1200_OR32_LWZ:
 	     begin
 		$fwrite(finsn,"l.lwz r%0d,0x%0h(r%0d)",rD_num,imm_16bit,rA_num);
+	     end
+
+	   `OR1200_OR32_LWS:
+	     begin
+		$fwrite(finsn,"l.lws r%0d,0x%0h(r%0d)",rD_num,imm_16bit,rA_num);
 	     end
 
 	   `OR1200_OR32_LBZ:
