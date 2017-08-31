@@ -55,6 +55,8 @@ obf_lut obf_lut_i(
 //////////////////////////////////////////////////
 
 // Instruction operand fields
+reg [`OBF_INSN_TYPE_WIDTH-1:0] f_in_type;
+
 wire [5:0] f_in_opc = ref_insn[31:26];
 wire [4:0] f_in_D   = ref_insn[25:21];
 wire [4:0] f_in_A   = ref_insn[20:16];
@@ -62,7 +64,6 @@ wire [4:0] f_in_B   = ref_insn[15:11];
 wire [15:0] f_in_I  = (f_in_type == `OBF_INSN_TYPE_I) ? ref_insn[15:0] : {ref_insn[25:21], ref_insn[10:0]};
 
 // Detect input instruction type
-reg [`OBF_INSN_TYPE_WIDTH-1:0] f_in_type;
 always @(f_in_opc) begin
     if(
         f_in_opc[5:4] == 2'b10 ||

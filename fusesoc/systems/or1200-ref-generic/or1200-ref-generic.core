@@ -7,17 +7,17 @@ depend =
  jtag_vpi-r2
  or1200-ref
  uart16550-1.5.4
+ verilator_tb_utils
  vlog_tb_utils-1.0
  wb_bfm-1.0
  wb_intercon-1.0
  wb_ram-1.0
 
-simulators = icarus modelsim verilator
+simulators = icarus modelsim
 
 [fileset rtl]
 files =
  bench/verilog/include/or1200_defines.v[is_include_file]
- bench/verilog/include/timescale.v[is_include_file]
  bench/verilog/wb_intercon.vh[is_include_file]
  bench/verilog/wb_intercon.v
  bench/verilog/orpsoc_top.v
@@ -25,6 +25,7 @@ file_type = verilogSource
 
 [fileset tb]
 files =
+ bench/verilog/include/timescale.v[is_include_file]
  bench/verilog/orpsoc_tb.v
 file_type = verilogSource
 usage = sim
@@ -33,7 +34,6 @@ usage = sim
 iverilog_options = -DSIM
 
 [verilator]
-depend = verilator_tb_utils
 verilator_options = -Wno-fatal --trace
 tb_toplevel   = bench/verilator/tb.cpp
 top_module    = orpsoc_top

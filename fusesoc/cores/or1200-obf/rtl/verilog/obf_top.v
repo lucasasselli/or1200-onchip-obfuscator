@@ -3,8 +3,6 @@
 // synopsys translate_on
 `include "or1200_defines.v"
 `include "obf_defines.v"
-/* `include "obf_igu.v" */
-/* `include "obf_lut.v" */
 
 module obf_top(
     // Clock and Reset
@@ -38,12 +36,12 @@ output reg io_stall;
 output reg io_no_more_dslot;
 
 wire obf_en = 1'b1; // Global obfuscator enable
-wire obf_bypass;
-wire obf_complete;
 wire obf_init;
 wire obf_rst;
-wire [`OBF_KEY_WIDTH-1:0] key = `OBF_KEY_WIDTH'd0;
+wire obf_last;
+wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 
+wire obf_bypass = !obf_en | (obf_init & (if_stall)); // TODO Obf init is necessary?
 wire real_id_freeze = id_freeze & !io_stall;
 
 //////////////////////////////////////////////////
@@ -53,14 +51,14 @@ wire real_id_freeze = id_freeze & !io_stall;
 reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
 
 wire ppc_en = !obf_bypass & !real_id_freeze;
-wire ppc_rst = obf_complete | obf_rst;
+wire ppc_rst = obf_last | obf_rst;
 wire ppc_skip;
 
 assign obf_init = (ppc_i == 0);
 
 always @(posedge clk or `OR1200_RST_EVENT rst)
 begin
-    if (rst == `OR1200_RST_VALUE) begin
+    if (rst == `OR1200_RST_VALUE | obf_rst) begin
         // Reset
         ppc_i <= 0;
     end
@@ -113,115 +111,20 @@ begin
 end
 
 //////////////////////////////////////////////////
-// SUBSTITUTION LUT
+// OBFUSCATED INSTRUCTION GENERATOR
 //////////////////////////////////////////////////
 
+wire [31:0] obf_insn;
 
-wire [`OBF_IGU_WIDTH-1:0] igu_i;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_sub;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_imm;
-
-// Index generator unit
-obf_igu obf_igu_i(
+obf_insngen obf_insngen_i(
     saved_insn,
-    igu_i
-);
-
-// Substitution LUT
-obf_lut obf_lut_i(
-    igu_i,
     ppc_i,
-    key,
-    lut_out_sub,
-    lut_out_imm
+    obf_key,
+    obf_insn,
+    obf_last,
+    ppc_skip
 );
 
-//////////////////////////////////////////////////
-// OBFUSCATED INSTRUCTION GENERATION
-//////////////////////////////////////////////////
-
-reg [31:0] obf_insn; // Obfuscated instruction
-
-wire [5:0]  f_in_opc; 
-wire [4:0]  f_in_D; 
-wire [4:0]  f_in_A; 
-wire [4:0]  f_in_B; 
-wire [15:0] f_in_I; 
-
-// Detect input instruction type
-reg [`OBF_INSN_TYPE_WIDTH-1:0] f_in_type;
-always @(f_in_opc) begin
-    if(
-        f_in_opc[5:4] == 2'b10 ||
-        f_in_opc == `OR1200_OR32_MOVHI ||
-        f_in_opc == `OR1200_OR32_RFE
-    ) begin
-        // I-type
-        f_in_type = `OBF_INSN_TYPE_I;
-    end
-    else if(
-        f_in_opc == `OR1200_OR32_MTSPR ||
-        f_in_opc == `OR1200_OR32_SW ||
-        f_in_opc == `OR1200_OR32_SH ||
-        f_in_opc == `OR1200_OR32_SB
-    ) begin
-        // M-type
-        f_in_type = `OBF_INSN_TYPE_M;
-    end
-    else if(
-        f_in_opc == `OR1200_OR32_ALU
-    ) begin
-        // A-type
-        f_in_type = `OBF_INSN_TYPE_A;
-    end
-    else begin
-        // TODO Place holder
-        f_in_type = `OBF_INSN_TYPE_N;
-    end
-end
-
-// Primary input fields
-assign f_in_opc         = saved_insn[31:26];
-assign f_in_D           = saved_insn[25:21];
-assign f_in_A           = saved_insn[20:16];
-assign f_in_B           = saved_insn[15:11];
-assign f_in_I           = (f_in_type == `OBF_INSN_TYPE_I) ? saved_insn[15:0] : {saved_insn[25:21], saved_insn[10:0]};
-
-// Parse LUT output
-wire [`OBF_INSN_TYPE_WIDTH-1:0] sub_type = lut_out_sub[`OBF_LUT_OUT_WIDTH-1:`OBF_LUT_OUT_WIDTH-`OBF_INSN_TYPE_WIDTH];
-wire [11:0]                     sub_cmd  = lut_out_sub[12:1];
-wire                            sub_last = lut_out_sub[0];
-
-// Generate output fields using cmd
-wire [5:0]  f_out_OPC0 = sub_cmd[11:6];
-wire [3:0]  f_out_OPC1 = sub_cmd[11:8];
-wire [3:0]  f_out_OPC2 = sub_cmd[7:4];
-wire [4:0]  f_out_D    = sub_cmd[3] ? 5'b00000 : f_in_D;
-
-wire [4:0]  f_out_A    = sub_cmd[2:1] == 2'b00 ? f_in_A:
-                         sub_cmd[2:1] == 2'b01 ? f_in_B:
-                         sub_cmd[2:1] == 2'b10 ? f_in_D:
-                         5'b00000;
-
-wire [4:0]  f_out_B    = sub_cmd[0] ? 5'b00000 : f_in_B;
-wire [15:0] f_out_I    = sub_cmd[5] ? lut_out_imm : sub_cmd[4]? 16'd0 : f_in_I;
-
-// Parse substitution command
-always @(*) 
-begin
-    // Type-field
-    case(sub_type)
-       `OBF_INSN_TYPE_A: obf_insn <= {`OR1200_OR32_ALU, f_out_D, f_out_A, f_out_B, 1'b0, f_out_OPC1, 2'b00, f_out_OPC2};
-       `OBF_INSN_TYPE_I: obf_insn <= {f_out_OPC0, f_out_D, f_out_A, f_out_I};
-       `OBF_INSN_TYPE_M: obf_insn <= {f_out_OPC0, f_out_I[15:11], f_out_A, f_out_B, f_out_I[10:0]};
-       `OBF_INSN_TYPE_N: obf_insn <= saved_insn;
-    endcase
-end
-
-assign ppc_skip = (sub_type == `OBF_INSN_TYPE_I || sub_type == `OBF_INSN_TYPE_M) ? sub_cmd[5] : 1'b0;
-
-assign obf_bypass = !obf_en | (obf_init & (if_stall)); // TODO Obf init is necessary?
-assign obf_complete = sub_last & !real_id_freeze;
 
 //////////////////////////////////////////////////
 // BRANCH DSLOT
