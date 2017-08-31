@@ -32,16 +32,18 @@ input ex_branch_taken;
 output reg if_stall_req;
 output [31:0] io_insn;
 output reg [31:0] io_pc;
-output reg io_stall;
+output io_stall;
 output reg io_no_more_dslot;
 
-wire obf_en = 1'b1; // Global obfuscator enable
 wire obf_init;
 wire obf_rst;
+wire obf_stop;
 wire obf_last;
+
+// TODO: Add key generator
 wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 
-wire obf_bypass = !obf_en | (obf_init & (if_stall)); // TODO Obf init is necessary?
+wire obf_bypass = obf_init & if_stall; // Don't bypass if not obf_init
 wire real_id_freeze = id_freeze & !io_stall;
 
 //////////////////////////////////////////////////
@@ -50,7 +52,7 @@ wire real_id_freeze = id_freeze & !io_stall;
 
 reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
 
-wire ppc_en = !obf_bypass & !real_id_freeze;
+wire ppc_en = !obf_bypass & !real_id_freeze & !obf_stop;
 wire ppc_rst = obf_last | obf_rst;
 wire ppc_skip;
 
@@ -125,7 +127,6 @@ obf_insngen obf_insngen_i(
     ppc_skip
 );
 
-
 //////////////////////////////////////////////////
 // BRANCH DSLOT
 //////////////////////////////////////////////////
@@ -133,6 +134,9 @@ obf_insngen obf_insngen_i(
 reg purge;
 reg [31:0] io_insn_reg;
 wire io_void = (io_insn_reg[31:26] == `OR1200_OR32_NOP) & io_insn_reg[16]; 
+
+// Prevents fecth module from fetching old instruction
+assign obf_stop = io_no_more_dslot & if_stall;
 
 always @(*) begin
     if(ex_branch_taken) begin
@@ -158,6 +162,7 @@ always @(*) begin
         end
     end
     else begin
+        // No branch
         io_no_more_dslot <= 1'b0;
         purge <= 1'b0;
     end
@@ -168,39 +173,11 @@ end
 //////////////////////////////////////////////////
 
 reg obf_flushable;
-assign obf_rst = purge & obf_flushable; // TODO: flushpipe
-assign io_insn = purge & obf_flushable ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
+reg io_stall_reg;
 
-// Instruction output
-always @(posedge clk or `OR1200_RST_EVENT rst) 
-begin
-    if (rst == `OR1200_RST_VALUE | obf_rst) begin
-        // Reset
-        io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
-        io_pc <= 32'h00000000;
-        obf_flushable <= 1'b1;
-    end
-    else begin
-        if (real_id_freeze) begin
-            // id stage frozen
-            io_insn_reg <= io_insn;
-            io_pc <= io_pc;
-            obf_flushable <= obf_flushable;
-        end
-        else if (obf_bypass) begin
-            // Obfuscator disabled or if stage stalling
-            io_insn_reg <= if_insn;
-            io_pc <= if_pc;
-            obf_flushable <= 1'b1;
-        end
-        else begin
-            // Obfusctor running
-            io_insn_reg <= obf_insn;
-            io_pc <= saved_pc;
-            obf_flushable <= obf_init;
-        end
-    end
-end
+assign obf_rst = purge & obf_flushable;
+assign io_insn = purge & obf_flushable ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
+assign io_stall = obf_stop ? 1'b1 : io_stall_reg;
 
 // Stall request
 always @(*) 
@@ -225,23 +202,51 @@ begin
         end
     end
 
-// Obfuscator stall
+// Output
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
-    if (rst == `OR1200_RST_VALUE) begin
+    if (rst == `OR1200_RST_VALUE | obf_rst) begin
         // Reset
-        io_stall <= 1'b0;
+        io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
+        io_pc <= 32'h00000000;
+        io_stall_reg <= 1'b0;
+
+        obf_flushable <= 1'b1;
     end
     else begin
-        if(real_id_freeze)
-            // If id stage is frozen there is no need to notify stall
-            io_stall <= 1'b0;
-        else if(!obf_bypass)
-            // If obfuscator is running no stall is issued
-            io_stall <= 1'b0;
-        else
-            // Other
-            io_stall <= if_stall;
+        if (real_id_freeze) begin
+            // ID stage frozen
+            io_insn_reg <= io_insn;
+            io_pc <= io_pc;
+            io_stall_reg <= 1'b0;
+
+            obf_flushable <= obf_flushable;
+        end
+        else if (obf_stop) begin
+            // Allows new instruction to be fetched after branch
+            io_insn_reg <= io_insn;
+            io_pc <= io_pc;
+            io_stall_reg <= 1'b0;
+
+            obf_flushable <= obf_flushable;
+        end
+        else if (obf_bypass) begin
+            // IF stage stalling
+            io_insn_reg <= if_insn;
+            io_pc <= if_pc;
+            io_stall_reg <= 1'b1;
+
+            obf_flushable <= 1'b1;
+        end
+        else begin
+            // Obfusctor running
+            io_insn_reg <= obf_insn;
+            io_pc <= saved_pc;
+            io_stall_reg <= 1'b0;
+
+            obf_flushable <= obf_init;
         end
     end
+end
+
 endmodule
