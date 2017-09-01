@@ -4,6 +4,7 @@ import logging
 from core import utils
 from core import decoder
 import re
+import os
 
 
 # Configuration
@@ -441,11 +442,28 @@ def get_lut_line(line, ref, stop):
     return [INSN_TYPE_N + 12 * "0" + stop_field]
 
 
+def write_out_file(out_file, template_file, sub_array):
+    # Read in the file
+    res_path = utils.get_res_path()
+
+    template_path = os.path.join(res_path, template_file)
+
+    with open(template_path, 'r') as file:
+        filedata = file.read()
+
+    # Replace the target string
+    for sub in sub_array:
+        filedata = filedata.replace(sub[0], sub[1])
+
+    # Write the file out again
+    with open(out_file, 'w') as file:
+        file.write(filedata)
+
+
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Generate LUT content for hardware obfuscator")
     parser.add_argument("file", type=str, help="input file")
-    parser.add_argument("-o", "--out", default="lut.v", type=str, help="output file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 
@@ -454,9 +472,6 @@ def main():
 
     # Read table
     insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
-
-    # Output fjile
-    f = open(args.out, 'w')
 
     # Compile
     logging.info("Compiler running...")
@@ -531,16 +546,18 @@ def main():
                 lut_pointer += len(temp_lut_content)
 
         # Write decoder content
+        decoder_body = ""
         for lut_decoder_word in lut_decoder:
-            out_string = "`OBF_IGU_WIDTH'd{:}: lut{:}_pointer = `OBF_LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_index, lut_decoder_word[1])
-            f.write(out_string)
+            decoder_body += "\t\t`OBF_IGU_WIDTH'd{:}: addr = `OBF_LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_decoder_word[1])
+        decoder_sub_array = [("%index%", str(lut_index)), ("%body%", decoder_body)]
+        write_out_file("obf_pt{:}.v".format(lut_index), "pt_template", decoder_sub_array)
 
         # Write lut content
+        lut_body = ""
         for lut_word_index, lut_word in enumerate(lut_content):
-            out_string = "lut{:}[{:}] = 16'b{:};\n".format(lut_index, lut_word_index, lut_word)
-            f.write(out_string)
-
-    f.close()
+            lut_body += "\tlut[{:}] = 16'b{:};\n".format(lut_word_index, lut_word)
+        lut_sub_array = [("%index%", str(lut_index)), ("%lenght%", str(len(lut_content)-1)), ("%body%", lut_body)]
+        write_out_file("obf_lut{:}.v".format(lut_index), "lut_template", lut_sub_array)
 
 
 if __name__ == "__main__":

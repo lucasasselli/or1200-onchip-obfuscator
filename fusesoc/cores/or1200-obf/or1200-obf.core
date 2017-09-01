@@ -7,7 +7,9 @@ src_files =
  rtl/verilog/obf_top.v
  rtl/verilog/obf_insngen.v
  rtl/verilog/obf_igu.v
- rtl/verilog/obf_lut.v
+ rtl/verilog/obf_lut_top.v
+ rtl/verilog/obf_lut0.v
+ rtl/verilog/obf_pt0.v
  rtl/verilog/or1200_alu.v
  rtl/verilog/or1200_amultp2_32x32.v
  rtl/verilog/or1200_cfgr.v

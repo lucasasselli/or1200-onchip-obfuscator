@@ -2,10 +2,10 @@
 
 # Configuration
 TARGET_SYS=or1200-obf-generic
-ELF_PATH=or1k-mibench/automotive/basicmath
-ELF_FILE=basicmath_large.elf
-# ELF_PATH=hello
-# ELF_FILE=main.elf
+# ELF_PATH=or1k-mibench/automotive/basicmath
+# ELF_FILE=basicmath_large.elf
+ELF_PATH=hello
+ELF_FILE=main.elf
 
 # DO NOT MODIFY AFTER THIS LINE
 SIMULATOR=modelsim-gui

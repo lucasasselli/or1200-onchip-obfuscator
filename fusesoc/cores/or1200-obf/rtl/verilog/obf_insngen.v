@@ -42,7 +42,7 @@ obf_igu obf_igu_i(
 );
 
 // Substitution LUT
-obf_lut obf_lut_i(
+obf_lut_top obf_lut_top_i(
     igu_i,
     ppc_i,
     obf_key,
