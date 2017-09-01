@@ -5,7 +5,7 @@
 
 module obf_pt0(
     index,
-    addr,
+    addr
 );
 
 input [`OBF_IGU_WIDTH-1:0] index;
