@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-TARGET_SYS=or1200-obf-generic
+TARGET_SYS=de10_lite
 # ELF_PATH=or1k-mibench/automotive/basicmath
 # ELF_FILE=basicmath_large.elf
 ELF_PATH=hello

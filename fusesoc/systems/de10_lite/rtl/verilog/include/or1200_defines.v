@@ -299,7 +299,7 @@
 // If you don't use them, then disable implementation
 // to save area.
 //
-//`define OR1200_IMPL_ADDC
+`define OR1200_IMPL_ADDC
 
 //
 // Implement l.sub instruction
@@ -321,7 +321,7 @@
 // instructions and if these three insns are not
 // implemented there is not much point having SR[CY].
 //
-//`define OR1200_IMPL_CY
+`define OR1200_IMPL_CY
 
 //
 // Implement carry bit SR[OV]
@@ -329,7 +329,7 @@
 // Compiler doesn't use this, but other code may like
 // to.
 //
-//`define OR1200_IMPL_OV
+`define OR1200_IMPL_OV
 
 //
 // Implement carry bit SR[OVE]
@@ -354,7 +354,7 @@
 // is disabled to save area and increase
 // clock frequency.
 //
-//`define OR1200_IMPL_ALU_ROTATE
+`define OR1200_IMPL_ALU_ROTATE
 
 //
 // Type of ALU compare to implement
@@ -379,7 +379,7 @@
 //
 // Implement l.extXs and l.extXz instructions
 //
-//`define OR1200_IMPL_ALU_EXT
+`define OR1200_IMPL_ALU_EXT
 
 //
 // Implement multiplier

@@ -60,22 +60,32 @@ assign obf_init = (ppc_i == 0);
 
 always @(posedge clk or `OR1200_RST_EVENT rst)
 begin
-    if (rst == `OR1200_RST_VALUE | obf_rst) begin
+    if (rst == `OR1200_RST_VALUE) begin
         // Reset
         ppc_i <= 0;
     end
-    else if(ppc_en) begin
-        if(ppc_rst) begin
-            // Substitution completed
+    else begin 
+        if(obf_rst) begin 
             ppc_i <= 0;
         end
+        else if(ppc_en) begin
+            // PPC Enabled
+            if(ppc_rst) begin
+                // Substitution completed
+                ppc_i <= 0;
+            end
+            else begin
+                // Substitution running
+                if(ppc_skip)
+                    // Skip immediate field
+                    ppc_i <= ppc_i + 2;
+                else
+                    ppc_i <= ppc_i + 1;
+            end
+        end
         else begin
-            // Substitution running
-            if(ppc_skip)
-                // Skip immediate field
-                ppc_i <= ppc_i + 2;
-            else
-                ppc_i <= ppc_i + 1;
+            // PPC Disabled
+            ppc_i <= ppc_i;
         end
     end
 end
@@ -205,7 +215,7 @@ begin
 // Output
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
-    if (rst == `OR1200_RST_VALUE | obf_rst) begin
+    if (rst == `OR1200_RST_VALUE) begin
         // Reset
         io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
         io_pc <= 32'h00000000;
@@ -214,7 +224,15 @@ begin
         obf_flushable <= 1'b1;
     end
     else begin
-        if (real_id_freeze) begin
+        if (obf_rst) begin
+            // Reset
+            io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
+            io_pc <= 32'h00000000;
+            io_stall_reg <= 1'b0;
+
+            obf_flushable <= 1'b1;
+        end
+        else if (real_id_freeze) begin
             // ID stage frozen
             io_insn_reg <= io_insn;
             io_pc <= io_pc;

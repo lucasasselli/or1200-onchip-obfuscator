@@ -7,8 +7,8 @@ set_location_assignment PIN_P11 -to sys_clk_pad_i
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sys_clk_pad_i
 
 #
-# UART0: RX <-> GPIO_2[0] (Pin 5, bottom header)
-#        TX <-> GPIO_2[1] (Pin 6, bottom header)
+# UART0: RX <-> GPIO_2[0] (Pin 1, bottom header)
+#        TX <-> GPIO_2[1] (Pin 2, bottom header)
 #
 set_location_assignment PIN_V10 -to uart0_srx_pad_i
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart0_srx_pad_i

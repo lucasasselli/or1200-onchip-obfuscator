@@ -1,7 +1,7 @@
 SAPI=1
 [main]
 name = de10_lite
-description = "Altera/Terasic de10 lite board OpenRISC system"
+description = "Altera/Terasic DE10 lite board OpenRISC system"
 
 backend = quartus
 
