@@ -42,6 +42,8 @@ always @(insn)
                 3'b101 : i = `OBF_IGU_WIDTH'd10;
                 // l.csync
                 3'b110 : i = `OBF_IGU_WIDTH'd11;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.rfe
         6'b001001 : i = `OBF_IGU_WIDTH'd12;
@@ -98,6 +100,8 @@ always @(insn)
                 2'b10 : i = `OBF_IGU_WIDTH'd36;
                 // l.rori
                 2'b11 : i = `OBF_IGU_WIDTH'd37;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.sfxxi
         6'b101111 :
@@ -122,6 +126,8 @@ always @(insn)
                 5'b01100 : i = `OBF_IGU_WIDTH'd46;
                 // l.sflesi
                 5'b01101 : i = `OBF_IGU_WIDTH'd47;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.mtspr
         6'b110000 : i = `OBF_IGU_WIDTH'd48;
@@ -136,6 +142,8 @@ always @(insn)
                 4'b0010 : i = `OBF_IGU_WIDTH'd51;
                 // l.msbu
                 4'b0100 : i = `OBF_IGU_WIDTH'd52;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.swa
         6'b110011 : i = `OBF_IGU_WIDTH'd53;
@@ -200,6 +208,8 @@ always @(insn)
                 8'b11xx1011 : i = `OBF_IGU_WIDTH'd81;
                 // l.muldu
                 8'b11xx1100 : i = `OBF_IGU_WIDTH'd82;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.sfxx
         6'b111001 :
@@ -224,6 +234,8 @@ always @(insn)
                 5'b01100 : i = `OBF_IGU_WIDTH'd91;
                 // l.sfles
                 5'b01101 : i = `OBF_IGU_WIDTH'd92;
+                // Default (error)
+                default : i = -'d1;
             endcase
         // l.cust5
         6'b111100 : i = `OBF_IGU_WIDTH'd93;
@@ -233,5 +245,7 @@ always @(insn)
         6'b111110 : i = `OBF_IGU_WIDTH'd95;
         // l.cust8
         6'b111110 : i = `OBF_IGU_WIDTH'd96;
+        // Default (error)
+        default : i = -'d1;
     endcase
 endmodule 

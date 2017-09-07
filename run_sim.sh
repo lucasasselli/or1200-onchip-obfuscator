@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Configuration
-TARGET_SYS=de10_lite
-# ELF_PATH=or1k-mibench/automotive/basicmath
-# ELF_FILE=basicmath_large.elf
-ELF_PATH=hello
-ELF_FILE=main.elf
+TARGET_SYS=or1200-obf-generic
+ELF_PATH=or1k-mibench/automotive/basicmath
+ELF_FILE=basicmath_small.elf
+# ELF_PATH=hello
+# ELF_FILE=main.elf
 
 # DO NOT MODIFY AFTER THIS LINE
 SIMULATOR=modelsim-gui

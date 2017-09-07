@@ -122,6 +122,7 @@ begin
        `OBF_INSN_TYPE_I: obf_insn <= {f_out_OPC0, f_out_D, f_out_A, f_out_I};
        `OBF_INSN_TYPE_M: obf_insn <= {f_out_OPC0, f_out_I[15:11], f_out_A, f_out_B, f_out_I[10:0]};
        `OBF_INSN_TYPE_N: obf_insn <= ref_insn;
+       default: obf_insn <= ref_insn; // TODO: Add some debug output
     endcase
 end
 
