@@ -43,6 +43,7 @@ wire obf_last;
 // TODO: Add key generator
 wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 
+// TODO: Evaluate using if_void
 wire obf_bypass = obf_init & if_stall; // Don't bypass if not obf_init
 wire real_id_freeze = id_freeze & !io_stall;
 
@@ -61,11 +62,12 @@ assign obf_init = (ppc_i == 0);
 always @(posedge clk or `OR1200_RST_EVENT rst)
 begin
     if (rst == `OR1200_RST_VALUE) begin
-        // Reset
+        // System reset
         ppc_i <= 0;
     end
     else begin 
         if(obf_rst) begin 
+            // Internal reset
             ppc_i <= 0;
         end
         else if(ppc_en) begin
@@ -185,8 +187,9 @@ end
 reg obf_flushable;
 reg io_stall_reg;
 
-assign obf_rst = purge & obf_flushable;
-assign io_insn = purge & obf_flushable ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
+assign obf_rst = (purge & obf_flushable) | id_flushpipe;
+
+assign io_insn = obf_rst ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
 assign io_stall = obf_stop ? 1'b1 : io_stall_reg;
 
 // Stall request
@@ -216,7 +219,7 @@ begin
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
     if (rst == `OR1200_RST_VALUE) begin
-        // Reset
+        // System reset
         io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
         io_pc <= 32'h00000000;
         io_stall_reg <= 1'b0;
@@ -225,7 +228,7 @@ begin
     end
     else begin
         if (obf_rst) begin
-            // Reset
+            // Internal reset
             io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
             io_pc <= 32'h00000000;
             io_stall_reg <= 1'b0;
