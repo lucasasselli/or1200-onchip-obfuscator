@@ -20,9 +20,18 @@ PATH_WORK = "/tmp/obf-temp"
 FILE_SIM_RESULT = "tb-general.log"
 
 OPERAND_REXP = ["rA", "rB", "rD", "I|N|K", "L"]
-OPERAND_SUBS = [("r3", "r4", "r31", "0xffff", "8"),
-                ("r0", "r4", "r31", "0xffff", "8"),
-                ("r3", "r0", "r31", "0xffff", "8")]
+
+# This is bad, I should feel bad. :-(
+# TODO: Change it
+OPERAND_SUBS = [
+                ("r3", "r4", "r31", "8", "8"),
+                ("r0", "r4", "r31", "8", "8"),
+                ("r3", "r0", "r31", "8", "8"),
+                ("r0", "r0", "r31", "8", "8"),
+                ("r31", "r4", "r31", "8", "8"),
+                ("r3", "r31", "r31", "8", "8"),
+                ("r31", "r31", "r31", "8", "8")
+                ]
 
 
 class TestFile:
@@ -169,8 +178,8 @@ class Tester:
                     error_result_ref = self.result_array[3]
                     error_result_sub = self.result_array[4]
 
-                    logging.error("(Result test) Mismatch at iteration %d:\nI=%s,%s\nR=%s\nS=%s",
-                                  error_iteration, error_operand1, error_operand2, error_result_ref, error_result_sub)
+                    logging.error("(Result test) Mismatch at iteration %d of test %d:\nI=%s,%s\nR=%s\nS=%s",
+                                  error_iteration, opset_index, error_operand1, error_operand2, error_result_ref, error_result_sub)
 
                     return False
 

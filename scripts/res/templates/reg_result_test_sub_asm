@@ -8,6 +8,9 @@ test_sub:
     l.andi r25,r3,1
     l.addi r25,r25,-1
 
+    // Set some value in r31 (rD)
+    l.xor r31,r3,r4
+
     // Code payload
     //||//
 
@@ -19,3 +22,5 @@ test_sub:
     l.ori r11,r31,0
     l.jr r9 
     l.nop   
+    
+// vim:syntax=or1kasm
