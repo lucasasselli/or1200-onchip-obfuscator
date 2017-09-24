@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import re
-import linecache
 import argparse
 import logging
 
@@ -23,7 +22,8 @@ class ExBlock():
         self.status = []
         for i in range(0, BLOCK_LENGTH):
 
-            line = linecache.getline(file_path, line_index + i)
+            # line = linecache.getline(file_path, line_index + i)
+            line = file_get_line(file_path, line_index + i)
             self.raw_string = self.raw_string + line
 
             if i == 0:
@@ -36,6 +36,23 @@ class ExBlock():
         logging.debug(self.line_index)
         logging.debug(self.pc)
         # logging.debug(self.status)
+
+
+def file_get_line(file_path, index):
+    out_line = ""
+    with open(file_path) as f:
+        for i in range(0, index - 1):
+            f.readline()
+        out_line = f.readline()
+
+    return out_line
+
+
+def peek_line(f):
+    pos = f.tell()
+    line = f.readline()
+    f.seek(pos)
+    return line
 
 
 def main():
@@ -89,10 +106,13 @@ def main():
             sim_block = temp_block
 
         if ref_block.status != sim_block.status:
-
+            # Block mismatch
             logging.error("Reference status:\n%s", ref_block.raw_string)
             logging.error("Test status:\n%s", sim_block.raw_string)
             ok = False
+        else:
+            # Block match
+            logging.debug("Block %d is equivalent!", ref_insn_index)
 
         # Move to next reference instruction
         ref_line_index += BLOCK_OFFSET
