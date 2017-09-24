@@ -5,54 +5,70 @@ import logging
 
 from core import utils
 
-START_OFFSET = 2
-BLOCK_LENGTH = 10
-BLOCK_OFFSET = 11
+BLOCK_LENGTH = 9
+STRIKE_LIMIT = 3
 
 
 class ExBlock():
 
     raw_string = ""
-    line_index = 0
     pc = ""
+    header = ""
     status = []
 
-    def from_file(self, file_path, line_index):
-        self.line_index = line_index
+    def from_file(self, f):
+        # Clear vars
+        self.raw_string = ""
+        self.header = ""
         self.status = []
-        for i in range(0, BLOCK_LENGTH):
 
-            # line = linecache.getline(file_path, line_index + i)
-            line = file_get_line(file_path, line_index + i)
+        # Read block
+        for i in range(0, BLOCK_LENGTH):
+            line = f.readline()
+
             self.raw_string = self.raw_string + line
 
             if i == 0:
+                self.header = line
                 result_array = re.findall(r"EXECUTED: (.*?):", line)
-                self.pc = result_array[0]
+                if len(result_array) == 0:
+                    logging.error("File alignment broken!")
+                    exit()
+                else:
+                    self.pc = result_array[0]
             else:
                 self.status.append(line)
 
-        logging.debug(file_path)
-        logging.debug(self.line_index)
-        logging.debug(self.pc)
-        # logging.debug(self.status)
-
-
-def file_get_line(file_path, index):
-    out_line = ""
-    with open(file_path) as f:
-        for i in range(0, index - 1):
-            f.readline()
-        out_line = f.readline()
-
-    return out_line
+        f.readline()
 
 
 def peek_line(f):
     pos = f.tell()
     line = f.readline()
+    if line == "":
+        logging.info("EOF!")
+        logging.debug(f)
     f.seek(pos)
     return line
+
+
+def skip_empty_lines(f):
+    while peek_line(f) is "\n":
+        f.readline()
+
+
+def peek_next_pc(f):
+    pos = f.tell()
+    pc_not_found = True
+    pc = ""
+    while pc_not_found:
+        line = f.readline()
+        if "EXECUTED" in line:
+            pc_not_found = False
+            result_array = re.findall(r"EXECUTED: (.*?):", line)
+            pc = result_array[0]
+    f.seek(pos)
+    return pc
 
 
 def main():
@@ -60,63 +76,74 @@ def main():
     parser = argparse.ArgumentParser(description="Compare reference simulation output with obfuscated output")
     parser.add_argument("ref", type=str, help="reference file")
     parser.add_argument("sim", type=str, help="test file")
+    parser.add_argument("-o", "--out", type=str, default="outcheck.log", help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
+    parser.add_argument("-p", "--parse", action='store_true', help="parse execution")
     args = parser.parse_args()
 
+    parse = args.parse
+
     # Logger
-    utils.init_logger(debug=args.debug, log_to_file=False)
+    utils.init_logger(args.out, debug=args.debug)
 
     # Read files
     ref_file_path = args.ref
     sim_file_path = args.sim
+    ref_file = open(ref_file_path)
+    sim_file = open(sim_file_path)
 
-    ref_insn_index = 1
-    sim_insn_index = 1
-
-    ref_line_index = START_OFFSET
-    sim_line_index = START_OFFSET
+    # Useful metrics
+    ref_insn_index = 0
 
     ok = True
-    while ok:
 
-        logging.debug("Checking insn. %d", ref_insn_index)
+    # After STRIKE_LIMIT mismatching instructions stop execution
+    strikes = 0
+
+    while ok:
+        skip_empty_lines(ref_file)
+        ref_insn_index += 1
 
         ref_block = ExBlock()
-        ref_block.from_file(ref_file_path, ref_line_index)
+        ref_block.from_file(ref_file)
 
+        logging.debug("Checking insn. %d", ref_insn_index)
+        logging.debug("Current PC: %s", ref_block.pc)
+
+        if parse:
+            logging.info(ref_block.header)
+
+        # Get last block of the substitution
+        sim_block = ExBlock()
+        is_last_sub = False
         sub_length = 0
+        while not is_last_sub:
+            sub_length += 1
+            skip_empty_lines(sim_file)
+            sim_block.from_file(sim_file)
 
-        sim_block = None
-        pc_matches = True
-        while pc_matches:
-            temp_block = ExBlock()
-            temp_block.from_file(sim_file_path, sim_line_index)
+            if parse: logging.info("\t%s", sim_block.header)
 
-            if ref_block.pc == temp_block.pc:
-                sim_block = temp_block
+            # Get next PC
+            next_sim_pc = peek_next_pc(sim_file)
+            if next_sim_pc != ref_block.pc:
+                is_last_sub = True
+                logging.debug("Substitution length: %d", sub_length)
 
-                sim_line_index += BLOCK_OFFSET
-                sim_insn_index += 1
-
-                sub_length += 1
+        if not parse:
+            if ref_block.status != sim_block.status:
+                # Block mismatch
+                strikes += 1
+                logging.error("Strike %d", strikes)
+                logging.error("Reference status:\n%s", ref_block.raw_string)
+                logging.error("Test status:\n%s", sim_block.raw_string)
             else:
-                pc_matches = False
+                # Block match
+                logging.debug("Block %d is equivalent!", ref_insn_index)
+                strikes = 0
 
-        if sim_block is None:
-            sim_block = temp_block
-
-        if ref_block.status != sim_block.status:
-            # Block mismatch
-            logging.error("Reference status:\n%s", ref_block.raw_string)
-            logging.error("Test status:\n%s", sim_block.raw_string)
-            ok = False
-        else:
-            # Block match
-            logging.debug("Block %d is equivalent!", ref_insn_index)
-
-        # Move to next reference instruction
-        ref_line_index += BLOCK_OFFSET
-        ref_insn_index += 1
+            if strikes > STRIKE_LIMIT:
+                ok = False
 
 
 if __name__ == '__main__':
