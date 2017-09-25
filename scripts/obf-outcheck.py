@@ -92,22 +92,32 @@ def main():
     ref_file = open(ref_file_path)
     sim_file = open(sim_file_path)
 
+    # Count lines
+    logging.info("Counting blocks...")
+    num_lines = sum(1 for line in ref_file)
+    block_cnt = num_lines / 11
+    logging.info("There are %d blocks to check", block_cnt)
+    ref_file.seek(0)
+
     # Useful metrics
-    ref_insn_index = 0
+    ref_block_index = 0
+    last_progress = 0
 
     ok = True
 
     # After STRIKE_LIMIT mismatching instructions stop execution
     strikes = 0
 
+    logging.info("Checking blocks...")
+
     while ok:
         skip_empty_lines(ref_file)
-        ref_insn_index += 1
+        ref_block_index += 1
 
         ref_block = ExBlock()
         ref_block.from_file(ref_file)
 
-        logging.debug("Checking insn. %d", ref_insn_index)
+        logging.debug("Checking insn. %d", ref_block_index)
         logging.debug("Current PC: %s", ref_block.pc)
 
         if parse:
@@ -122,7 +132,8 @@ def main():
             skip_empty_lines(sim_file)
             sim_block.from_file(sim_file)
 
-            if parse: logging.info("\t%s", sim_block.header)
+            if parse:
+                logging.info("\t%s", sim_block.header)
 
             # Get next PC
             next_sim_pc = peek_next_pc(sim_file)
@@ -139,11 +150,16 @@ def main():
                 logging.error("Test status:\n%s", sim_block.raw_string)
             else:
                 # Block match
-                logging.debug("Block %d is equivalent!", ref_insn_index)
+                logging.debug("Block %d is equivalent!", ref_block_index)
                 strikes = 0
 
             if strikes > STRIKE_LIMIT:
                 ok = False
+
+        progress = int((ref_block_index / block_cnt) * 100.0)
+        if (progress > last_progress):
+            last_progress = progress
+            print(progress, "%")
 
 
 if __name__ == '__main__':
