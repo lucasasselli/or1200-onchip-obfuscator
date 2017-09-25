@@ -2,6 +2,7 @@
 import re
 import argparse
 import logging
+import progressbar
 
 from core import utils
 
@@ -45,11 +46,18 @@ class ExBlock():
 def peek_line(f):
     pos = f.tell()
     line = f.readline()
-    if line == "":
-        logging.info("EOF!")
-        logging.debug(f)
     f.seek(pos)
     return line
+
+
+def checkEOF(f):
+    pos = f.tell()
+    line = f.readline()
+    EOF = False
+    if line == "":
+        EOF = True
+    f.seek(pos)
+    return EOF
 
 
 def skip_empty_lines(f):
@@ -78,10 +86,7 @@ def main():
     parser.add_argument("sim", type=str, help="test file")
     parser.add_argument("-o", "--out", type=str, default="outcheck.log", help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
-    parser.add_argument("-p", "--parse", action='store_true', help="parse execution")
     args = parser.parse_args()
-
-    parse = args.parse
 
     # Logger
     utils.init_logger(args.out, debug=args.debug)
@@ -99,20 +104,28 @@ def main():
     logging.info("There are %d blocks to check", block_cnt)
     ref_file.seek(0)
 
+    bar = progressbar.ProgressBar(maxval=block_cnt, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+
     # Useful metrics
     ref_block_index = 0
-    last_progress = 0
 
     ok = True
+    ref_eof = False
+    sim_eof = False
 
     # After STRIKE_LIMIT mismatching instructions stop execution
     strikes = 0
 
     logging.info("Checking blocks...")
+    bar.start()
 
     while ok:
         skip_empty_lines(ref_file)
         ref_block_index += 1
+
+        if checkEOF(ref_file):
+            ref_eof = True
+            break
 
         ref_block = ExBlock()
         ref_block.from_file(ref_file)
@@ -120,46 +133,49 @@ def main():
         logging.debug("Checking insn. %d", ref_block_index)
         logging.debug("Current PC: %s", ref_block.pc)
 
-        if parse:
-            logging.info(ref_block.header)
-
         # Get last block of the substitution
         sim_block = ExBlock()
         is_last_sub = False
+        pc_error = False
         sub_length = 0
         while not is_last_sub:
             sub_length += 1
             skip_empty_lines(sim_file)
             sim_block.from_file(sim_file)
 
-            if parse:
-                logging.info("\t%s", sim_block.header)
+            if sub_length == 1 and sim_block.pc != ref_block.pc:
+                pc_error = True
+                break
 
             # Get next PC
+            if checkEOF(ref_file):
+                sim_eof = True
+                break
+
             next_sim_pc = peek_next_pc(sim_file)
             if next_sim_pc != ref_block.pc:
                 is_last_sub = True
                 logging.debug("Substitution length: %d", sub_length)
 
-        if not parse:
-            if ref_block.status != sim_block.status:
-                # Block mismatch
-                strikes += 1
-                logging.error("Strike %d", strikes)
-                logging.error("Reference status:\n%s", ref_block.raw_string)
-                logging.error("Test status:\n%s", sim_block.raw_string)
-            else:
-                # Block match
-                logging.debug("Block %d is equivalent!", ref_block_index)
-                strikes = 0
+        if ref_block.status != sim_block.status or pc_error:
+            # Block mismatch
+            strikes += 1
+            logging.error("Strike %d", strikes)
+            logging.error("Reference status:\n%s", ref_block.raw_string)
+            logging.error("Test status:\n%s", sim_block.raw_string)
+        else:
+            # Block match
+            logging.debug("Block %d is equivalent!", ref_block_index)
+            strikes = 0
 
             if strikes > STRIKE_LIMIT:
                 ok = False
 
-        progress = int((ref_block_index / block_cnt) * 100.0)
-        if (progress > last_progress):
-            last_progress = progress
-            print(progress, "%")
+        bar.update(ref_block_index)
+    bar.finish()
+
+    if ok and ref_eof and not sim_eof:
+        logging.error("Test didn't reach EOF!")
 
 
 if __name__ == '__main__':
