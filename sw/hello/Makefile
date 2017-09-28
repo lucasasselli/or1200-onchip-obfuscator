@@ -1,12 +1,12 @@
-CFLAGS=-mboard=de0_nano -DDE0_NANO
+CFLAGS=-mboard=or1ksim
 
-all: main.elf main.lst
+all: hello.elf hello.lst
 
-main.elf: main.c
-	or1k-elf-gcc -g -o main.elf $(CFLAGS) main.c
+hello.elf: hello.c
+	or1k-elf-gcc -g -o hello.elf $(CFLAGS) hello.c
 
-main.lst: main.elf
-	or1k-elf-objdump -d main.elf > main.lst
+hello.lst: hello.elf
+	or1k-elf-objdump -d hello.elf > hello.lst
 
 clean:
 	rm -rf build/ *.lst *.elf
