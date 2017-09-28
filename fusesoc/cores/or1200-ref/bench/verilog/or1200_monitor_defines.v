@@ -40,6 +40,11 @@
 `define OR1200_MONITOR_VERBOSE_NOPS
 
 //
+// Enable report l.nops to a separate file
+//
+`define OR1200_MONITOR_OUTPUT
+
+//
 // Enable monitoring of control and execution flow (experimental)
 //
 //`define OR1200_SYSTEM_CHECKER

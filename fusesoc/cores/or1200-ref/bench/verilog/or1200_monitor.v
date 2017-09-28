@@ -56,6 +56,9 @@ module or1200_monitor;
 `ifdef OR1200_MONITOR_LOOKUP
    integer    flookup;
 `endif
+`ifdef OR1200_MONITOR_OUTPUT
+   integer    fout;
+`endif
    integer    r3;
    integer    insns;
    integer    sr;
@@ -79,6 +82,9 @@ module or1200_monitor;
       fgeneral = $fopen({LOG_DIR, "/", TEST_NAME_STRING,"-general.log"});
 `ifdef OR1200_MONITOR_LOOKUP
       flookup = $fopen({LOG_DIR, "/", TEST_NAME_STRING,"-lookup.log"});
+`endif
+`ifdef OR1200_MONITOR_OUTPUT
+      fout = $fopen({LOG_DIR, "/", TEST_NAME_STRING,"-output.log"});
 `endif
       insns = 0;
 
@@ -331,9 +337,9 @@ module or1200_monitor;
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop exit (%h)", $time, r3);
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
-       // Note that the 'expect' scripts in or1ksim's test suite look for strings
-       // like "exit(1)", therefore something like "exit(  1)" would fail.
-       $display("exit(%0d)",r3);
+           // Note that the 'expect' scripts in or1ksim's test suite look for strings
+           // like "exit(1)", therefore something like "exit(  1)" would fail.
+           $display("exit(%0d)",r3);
 `endif
 	   $finish;
 	   //... or l.nop 0xc
@@ -369,6 +375,9 @@ module or1200_monitor;
 	   get_gpr(3, r3);
 	   $write("%c", r3);
 	   $fdisplay(fgeneral, "%t: l.nop putc (%c)", $time, r3);
+`ifdef OR1200_MONITOR_OUTPUT
+           $fwrite(fout, "%c", r3);
+`endif
 	end
 `ifdef OR1200_MONITOR_SPRS
 	if (`OR1200_TOP.`CPU_cpu.`CPU_sprs.spr_we)

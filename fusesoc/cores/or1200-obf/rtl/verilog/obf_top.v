@@ -270,4 +270,13 @@ begin
     end
 end
 
+// Debug
+// synopsys translate_off
+always @(*) begin
+    if (id_flushpipe && ppc_i>0) begin
+	$display("A flush was issued while the obfuscator was running!");
+    end
+end
+// synopsys translate_on
+
 endmodule
