@@ -7,7 +7,8 @@ import progressbar
 from core import utils
 
 BLOCK_LENGTH = 9
-STRIKE_LIMIT = 3
+STRIKE_LIMIT = 1
+CONTEXT_SIZE = 50
 
 
 class ExBlock():
@@ -113,6 +114,9 @@ def main():
     ref_eof = False
     sim_eof = False
 
+    ref_context = [None]*CONTEXT_SIZE
+    sim_context = [None]*CONTEXT_SIZE
+
     # After STRIKE_LIMIT mismatching instructions stop execution
     strikes = 0
 
@@ -123,6 +127,10 @@ def main():
         skip_empty_lines(ref_file)
         ref_block_index += 1
 
+        # Trim context
+        ref_context.pop(0)
+        sim_context.pop(0)
+
         if checkEOF(ref_file):
             ref_eof = True
             break
@@ -130,20 +138,27 @@ def main():
         ref_block = ExBlock()
         ref_block.from_file(ref_file)
 
+        # Add to context
+        ref_context.append(ref_block)
+
         logging.debug("Checking insn. %d", ref_block_index)
         logging.debug("Current PC: %s", ref_block.pc)
 
         # Get last block of the substitution
-        sim_block = ExBlock()
+        sim_block = None
         is_last_sub = False
         pc_error = False
         sub_length = 0
+        temp_sim_context = []
         while not is_last_sub:
             sub_length += 1
             skip_empty_lines(sim_file)
-            sim_block.from_file(sim_file)
+            temp_block = ExBlock()
+            temp_block.from_file(sim_file)
+            temp_sim_context.append(temp_block)
+            sim_block = temp_block
 
-            if sub_length == 1 and sim_block.pc != ref_block.pc:
+            if sub_length == 1 and temp_block.pc != ref_block.pc:
                 pc_error = True
                 break
 
@@ -157,6 +172,8 @@ def main():
                 is_last_sub = True
                 logging.debug("Substitution length: %d", sub_length)
 
+        sim_context.append(temp_sim_context)
+
         if ref_block.status != sim_block.status or pc_error:
             # Block mismatch
             strikes += 1
@@ -168,14 +185,28 @@ def main():
             logging.debug("Block %d is equivalent!", ref_block_index)
             strikes = 0
 
-            if strikes > STRIKE_LIMIT:
-                ok = False
-
         bar.update(ref_block_index)
+
+        if strikes >= STRIKE_LIMIT:
+            ok = False
+
     bar.finish()
 
     if ok and ref_eof and not sim_eof:
         logging.error("Test didn't reach EOF!")
+    elif not ok:
+        logging.error("Test failed!")
+        logging.info("Dumping reference context...")
+        with open("ref_context.log", "w") as f:
+            for block in ref_context:
+                f.write(block.raw_string)
+        logging.info("Dumping test context...")
+        with open("test_context.log", "w") as f:
+            for block_list in sim_context:
+                for block in block_list:
+                    f.write(block.raw_string)
+    else:
+        logging.info("Test passed!")
 
 
 if __name__ == '__main__':
