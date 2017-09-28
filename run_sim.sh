@@ -38,15 +38,16 @@ if [ "$ELF_FILE" == false ]; then
     exit 1
 fi
 
-if [ ! -f "$ELF_FILE" ]; then
-    echo "Specified .elf file doesn't exist" >&2
-    exit 1
-fi
 
 # Get elf info
 ELF_DIR=$(dirname $ELF_FILE)
 ELF_FULLNAME=$(basename $ELF_FILE)
 ELF_NAME=${ELF_FULLNAME%.*}
+
+if [ ! -d "$ELF_DIR" ]; then
+    echo "Specified .elf file path doesn't exist." >&2
+    exit 1
+fi
 
 # Print info and set stuff
 case $TARGET_NAME in
@@ -67,6 +68,11 @@ esac
 # Compile target software
 make clean -C $ELF_DIR
 make $ELF_FULLNAME -C $ELF_DIR
+
+if [ ! -f "$ELF_FILE" ]; then
+    echo "Specified .elf file doesn't exist." >&2
+    exit 1
+fi
 
 # Start simulation
 if [ "$SIMULATOR" = "modelsim-gui" ]; then
