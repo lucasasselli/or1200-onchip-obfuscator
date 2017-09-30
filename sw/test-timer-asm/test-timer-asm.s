@@ -11,8 +11,10 @@
     .org 0x100 
 
 # Constants
-    .set ADDR_T, 0b0101000000000000
-    .set ADDR_SR, 0b0000000000010001
+    .set ADDR_TT,0b0101000000000000
+    .set ADDR_SR,0b0000000000010001
+    .set TT_RUN,0b1110000000000000
+    .set TT_CNT,100
 
 _start:
     l.movhi r0,0
@@ -24,12 +26,12 @@ _start:
     l.mtspr r1,r2,0
 
 # Clear TTCR
-    l.xori r1,r0,ADDR_T # TTMR address
+    l.xori r1,r0,ADDR_TT # TTMR address
     l.mtspr r1,r0,1
 
 # Start timer
-    l.movhi r2,0b1010000000000000 # TTMR content (high)
-    l.ori r2,r2, 255              # TTMR content (low)
+    l.movhi r2,TT_RUN  # TTMR content (high)
+    l.ori r2,r2,TT_CNT # TTMR content (low)
     l.mtspr r1,r2,0
 
 # Set seed
@@ -39,11 +41,11 @@ _start:
     l.movhi r4,0
 
 xor_shifth:
+    l.add r3,r3,r0
     l.srli r1,r3,3  # XS 1
     l.xor r3,r3,r1
+    l.add r3,r3,r0
     l.slli r1,r3,15 # XS 2
-    l.xor r3,r3,r1
-    l.srli r1,r3,12 # XS 3
     l.xor r3,r3,r1
 
 # Report r3
@@ -54,13 +56,25 @@ xor_shifth:
     l.bnf xor_shifth
     l.addi r4,r4,1
 
+# Stop timer
+    l.xori r1,r0,ADDR_TT
+    l.mfspr r2,r0,0
+
     l.nop 0xc # Exit
 
     .org 0x500
 timer_int:
-    # Clear interrupt flag
-    l.xori r1,r0,ADDR_T
-    l.mtspr r1,r0,0
+
+# Clear TTCR
+    l.xori r1,r0,ADDR_TT # TTMR address
+    l.mtspr r1,r0,1
+
+# Clear interrupt flag
+    l.xori r1,r0,ADDR_TT
+    l.movhi r2,TT_RUN  # TTMR content (high)
+    l.ori r2,r2,TT_CNT # TTMR content (low)
+    l.mtspr r1,r2,0
+
     l.rfe
     l.nop
 
