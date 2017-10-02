@@ -9,10 +9,10 @@ module obf_top(
     clk, rst,
 
     // Inputs
-    if_insn, if_pc, id_freeze, if_stall, id_flushpipe, ex_branch_taken, id_void,
+    if_insn, if_pc, id_freeze, if_stall, io_flushpipe, ex_branch_taken, id_void,
 
     // Outputs
-    if_stall_req, io_insn, io_pc, io_stall, io_no_more_dslot
+    if_stall_req, io_insn, io_pc, io_stall, io_no_more_dslot, io_flushable
 );
 
 
@@ -27,13 +27,14 @@ input [31:0] if_pc;
 input if_stall;
 input id_freeze;
 input id_void;
-input id_flushpipe;
+input io_flushpipe;
 input ex_branch_taken;
 output reg if_stall_req;
 output [31:0] io_insn;
 output reg [31:0] io_pc;
 output io_stall;
 output reg io_no_more_dslot;
+output reg io_flushable;
 
 wire obf_init;
 wire obf_rst;
@@ -184,10 +185,9 @@ end
 // OUTPUTS
 //////////////////////////////////////////////////
 
-reg obf_flushable;
 reg io_stall_reg;
 
-assign obf_rst = (purge & obf_flushable) | id_flushpipe;
+assign obf_rst = (purge & io_flushable) | io_flushpipe;
 
 assign io_insn = obf_rst ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
 assign io_stall = obf_stop ? 1'b1 : io_stall_reg;
@@ -224,7 +224,7 @@ begin
         io_pc <= 32'h00000000;
         io_stall_reg <= 1'b0;
 
-        obf_flushable <= 1'b1;
+        io_flushable <= 1'b1;
     end
     else begin
         if (obf_rst) begin
@@ -233,7 +233,7 @@ begin
             io_pc <= 32'h00000000;
             io_stall_reg <= 1'b0;
 
-            obf_flushable <= 1'b1;
+            io_flushable <= 1'b1;
         end
         else if (real_id_freeze) begin
             // ID stage frozen
@@ -241,7 +241,7 @@ begin
             io_pc <= io_pc;
             io_stall_reg <= 1'b0;
 
-            obf_flushable <= obf_flushable;
+            io_flushable <= io_flushable;
         end
         else if (obf_stop) begin
             // Allows new instruction to be fetched after branch
@@ -249,7 +249,7 @@ begin
             io_pc <= io_pc;
             io_stall_reg <= 1'b0;
 
-            obf_flushable <= obf_flushable;
+            io_flushable <= io_flushable;
         end
         else if (obf_bypass) begin
             // IF stage stalling
@@ -257,7 +257,7 @@ begin
             io_pc <= if_pc;
             io_stall_reg <= 1'b1;
 
-            obf_flushable <= 1'b1;
+            io_flushable <= 1'b1;
         end
         else begin
             // Obfusctor running
@@ -265,7 +265,7 @@ begin
             io_pc <= saved_pc;
             io_stall_reg <= 1'b0;
 
-            obf_flushable <= obf_init;
+            io_flushable <= obf_init;
         end
     end
 end
@@ -273,7 +273,7 @@ end
 // Debug
 // synopsys translate_off
 always @(*) begin
-    if (id_flushpipe && ppc_i>0) begin
+    if (io_flushpipe && ppc_i>0) begin
 	$display("A flush was issued while the obfuscator was running!");
     end
 end

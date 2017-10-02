@@ -259,6 +259,7 @@ wire	[`OR1200_EXCEPT_WIDTH-1:0]	except_type;
 wire	[4:0]			cust5_op;
 wire	[5:0]			cust5_limm;
 wire				if_flushpipe;
+wire				io_flushpipe;
 wire				id_flushpipe;
 wire				ex_flushpipe;
 wire				wb_flushpipe;
@@ -345,6 +346,11 @@ wire                            io_stall;
 wire	[31:0]			io_pc;
 wire                            if_stall_req;
 wire                            io_no_more_dslot;
+
+wire                            io_flushable;
+wire                            id_flushable;
+wire                            ex_flushable;
+wire                            wb_flushable;
 
 //
 // Send exceptions to Debug Unit
@@ -496,12 +502,14 @@ obf_top obf_top(
         .id_freeze(id_freeze),
         .id_void(id_void),
         .ex_branch_taken(ex_branch_taken),
-        .id_flushpipe(id_flushpipe),
+        .io_flushpipe(io_flushpipe),
         .io_insn(io_insn),
         .io_pc(io_pc),
         .io_stall(io_stall),
         .io_no_more_dslot(io_no_more_dslot),
-        .if_stall_req(if_stall_req)
+        .if_stall_req(if_stall_req),
+        .io_flushable(io_flushable)
+
 );
 
 //
@@ -514,6 +522,7 @@ or1200_ctrl or1200_ctrl(
 	.ex_freeze(ex_freeze),
 	.wb_freeze(wb_freeze),
 	.if_flushpipe(if_flushpipe),
+	.io_flushpipe(io_flushpipe),
 	.id_flushpipe(id_flushpipe),
 	.ex_flushpipe(ex_flushpipe),
 	.wb_flushpipe(wb_flushpipe),
@@ -568,7 +577,11 @@ or1200_ctrl or1200_ctrl(
 	.du_hwbkpt(du_hwbkpt),
 	.except_illegal(except_illegal),
 	.dc_no_writethrough(dc_no_writethrough),
-	.du_flush_pipe(du_flush_pipe)
+	.du_flush_pipe(du_flush_pipe),
+        .io_flushable(io_flushable),
+        .id_flushable(id_flushable),
+        .ex_flushable(ex_flushable),
+        .wb_flushable(wb_flushable)
 );
 
 //
@@ -917,7 +930,11 @@ or1200_except or1200_except(
 	.to_sr(to_sr),
 	.sr(sr),
 	.abort_ex(abort_ex),
-	.dsx(dsx)
+	.dsx(dsx),
+        .io_flushable(io_flushable),
+        .id_flushable(id_flushable),
+        .ex_flushable(ex_flushable),
+        .wb_flushable(wb_flushable)
 );
 
 //
