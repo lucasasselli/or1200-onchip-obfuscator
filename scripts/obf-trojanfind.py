@@ -137,12 +137,12 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="Compare reference simulation output with obfuscated output to spot trojan triggers")
-    parser.add_argument("ref", type=str, help="reference file")
-    parser.add_argument("obf", type=str, help="obfuscated file")
-    parser.add_argument("-ml", "--min_length", type=int, help="min trigger length")
-    parser.add_argument("-Ml", "--max_length", type=int, help="max trigger length")
-    parser.add_argument("-c", "--count", type=int, help="how many times the trigger can appear")
-    parser.add_argument("-o", "--out", type=str, default="outcheck.log", help="log file")
+    parser.add_argument("ref", type=str, required=True, help="reference file")
+    parser.add_argument("obf", type=str, required=True, help="obfuscated file")
+    parser.add_argument("-ml", "--min_length", type=int, required=True, help="min trigger length")
+    parser.add_argument("-Ml", "--max_length", type=int, required=True, help="max trigger length")
+    parser.add_argument("-c", "--count", type=int, required=True, help="how many times the trigger can appear")
+    parser.add_argument("-o", "--out", type=str, default="trojanfind.log", help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 
@@ -251,6 +251,8 @@ def main():
         insn_index += 1
         bar.update(insn_index)
 
+    bar.finish()
+
     ##################################################
     # STATISTICS
     ##################################################
@@ -272,7 +274,7 @@ def main():
                 survivor_cnt += 1
 
     # Print stats
-    # TODO print cofiguration for reference
+    # TODO print configuration for reference
     logging.info("Reference length: %d", ref_insn_cnt)
     logging.info("Obfuscated length: %d", obf_insn_cnt)
     logging.info("OR ratio: %f", or_ratio)
