@@ -92,205 +92,6 @@ def get_I_field(x):
         return "10"
 
 
-def get_index(name):
-    if name == "l.j":
-        return 0
-    if name == "l.jal":
-        return 1
-    if name == "l.bnf":
-        return 2
-    if name == "l.bf":
-        return 3
-    if name == "l.nop":
-        return 4
-    if name == "l.macrc":
-        return 5
-    if name == "l.movhi":
-        return 6
-    if name == "l.sys":
-        return 7
-    if name == "l.trap":
-        return 8
-    if name == "l.msync":
-        return 9
-    if name == "l.psync":
-        return 10
-    if name == "l.csync":
-        return 11
-    if name == "l.rfe":
-        return 12
-    if name == "l.jr":
-        return 13
-    if name == "l.jalr":
-        return 14
-    if name == "l.maci":
-        return 15
-    if name == "l.cust1":
-        return 16
-    if name == "l.cust2":
-        return 17
-    if name == "l.cust3":
-        return 18
-    if name == "l.cust4":
-        return 19
-    if name == "l.ld":
-        return 20
-    if name == "l.lwz":
-        return 21
-    if name == "l.lws":
-        return 22
-    if name == "l.lbz":
-        return 23
-    if name == "l.lbs":
-        return 24
-    if name == "l.lhz":
-        return 25
-    if name == "l.lhs":
-        return 26
-    if name == "l.addi":
-        return 27
-    if name == "l.addic":
-        return 28
-    if name == "l.andi":
-        return 29
-    if name == "l.ori":
-        return 30
-    if name == "l.xori":
-        return 31
-    if name == "l.muli":
-        return 32
-    if name == "l.mfspr":
-        return 33
-    if name == "l.slli":
-        return 34
-    if name == "l.srli":
-        return 35
-    if name == "l.srai":
-        return 36
-    if name == "l.rori":
-        return 37
-    if name == "l.sfeqi":
-        return 38
-    if name == "l.sfnei":
-        return 39
-    if name == "l.sfgtui":
-        return 40
-    if name == "l.sfgeui":
-        return 41
-    if name == "l.sfltui":
-        return 42
-    if name == "l.sfleui":
-        return 43
-    if name == "l.sfgtsi":
-        return 44
-    if name == "l.sfgesi":
-        return 45
-    if name == "l.sfltsi":
-        return 46
-    if name == "l.sflesi":
-        return 47
-    if name == "l.mtspr":
-        return 48
-    if name == "l.mac":
-        return 49
-    if name == "l.macu":
-        return 50
-    if name == "l.msb":
-        return 51
-    if name == "l.msbu":
-        return 52
-    if name == "l.swa":
-        return 53
-    if name == "l.sd":
-        return 54
-    if name == "l.sw":
-        return 55
-    if name == "l.sb":
-        return 56
-    if name == "l.sh":
-        return 57
-    if name == "l.exths":
-        return 58
-    if name == "l.extws":
-        return 59
-    if name == "l.extbs":
-        return 60
-    if name == "l.extwz":
-        return 61
-    if name == "l.exthz":
-        return 62
-    if name == "l.extbz":
-        return 63
-    if name == "l.add":
-        return 64
-    if name == "l.addc":
-        return 65
-    if name == "l.sub":
-        return 66
-    if name == "l.and":
-        return 67
-    if name == "l.or":
-        return 68
-    if name == "l.xor":
-        return 69
-    if name == "l.cmov":
-        return 70
-    if name == "l.ff1":
-        return 71
-    if name == "l.sll":
-        return 72
-    if name == "l.srl":
-        return 73
-    if name == "l.sra":
-        return 74
-    if name == "l.ror":
-        return 75
-    if name == "l.fl1":
-        return 76
-    if name == "l.mul":
-        return 77
-    if name == "l.muld":
-        return 78
-    if name == "l.div":
-        return 79
-    if name == "l.divu":
-        return 80
-    if name == "l.mulu":
-        return 81
-    if name == "l.muldu":
-        return 82
-    if name == "l.sfeq":
-        return 83
-    if name == "l.sfne":
-        return 84
-    if name == "l.sfgtu":
-        return 85
-    if name == "l.sfgeu":
-        return 86
-    if name == "l.sfltu":
-        return 87
-    if name == "l.sfleu":
-        return 88
-    if name == "l.sfgts":
-        return 89
-    if name == "l.sfges":
-        return 90
-    if name == "l.sflts":
-        return 91
-    if name == "l.sfles":
-        return 92
-    if name == "l.cust5":
-        return 93
-    if name == "l.cust6":
-        return 94
-    if name == "l.cust7":
-        return 95
-    if name == "l.cust8":
-        return 96
-    else:
-        raise ValueError
-
-
 def get_lut_line(line, ref, stop):
 
     line_find = re.findall(r"l\.", line)
@@ -508,7 +309,7 @@ def main():
             # Get reference index
             ref_insn = insn_ref_array[insn_index]
             ref_insn_split = ref_insn.split()
-            decoder_index = get_index(ref_insn_split[0])
+            decoder_index = decoder.get_index(ref_insn_split[0])
 
             temp_lut_content = []
 
@@ -556,7 +357,7 @@ def main():
         lut_body = ""
         for lut_word_index, lut_word in enumerate(lut_content):
             lut_body += "\tlut[{:}] = 16'b{:};\n".format(lut_word_index, lut_word)
-        lut_sub_array = [("%index%", str(lut_index)), ("%lenght%", str(len(lut_content)-1)), ("%body%", lut_body)]
+        lut_sub_array = [("%index%", str(lut_index)), ("%lenght%", str(len(lut_content) - 1)), ("%body%", lut_body)]
         write_out_file("obf_lut{:}.v".format(lut_index), "lut_template", lut_sub_array)
 
 
