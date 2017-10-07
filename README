@@ -4,109 +4,160 @@
 /_//_/ |__/|__/  \____/____/_/  \____/___/\___/_/ |_/_/  \____/_/|_| 
 
 Author : Luca Sasselli
-Rev    : 1
+Rev    : 2
 
-NOTES:
-- Reserved bit in instructions are assumed 0
+TODOS:
+    - Exception management
+    - Implement type S and N 
 
-TODO:
-- Type F and FI?
+WHAT IS AN HARDWARE OBFUSCATOR?
 
-000     Type N      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-001     Type A      OOOOOODDDDDAAAAABBBBB_XXXX__YYYY
-010     Type I      OOOOOODDDDDAAAAAIIIIIIIIIIIIIIII
-011     Type B      OOOOOONNNNNNNNNNNNNNNNNNNNNNNNNN
-100     Type F      OOOOOOFFFFFAAAAABBBBB___________
-100     Type FI     OOOOOOFFFFFAAAAAIIIIIIIIIIIIIIII
-101     Type S      Non standanrd op. code
-110     Type M      OOOOOOIIIIIAAAAABBBBBIIIIIIIIIII
+    An hardware obfuscator is a software obfuscator implemented directly in a processor pipeline,
+    in the attempt to mitigate hardware trojan activation. 
 
-## LUT word ##
+INSTRUCTION TYPES
 
-+---------+---------+------+
-| 15 - 12 | 11 - 1  | 0    |
-+---------+---------+------+
-| TYPE    | COMMAND | STOP |
-+---------+---------+------+
+    000     Type N      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    001     Type A      OOOOOODDDDDAAAAABBBBB_XXXX__YYYY
+    010     Type I      OOOOOODDDDDAAAAAIIIIIIIIIIIIIIII
+    011     Type M      OOOOOOIIIIIAAAAABBBBBIIIIIIIIIII
+    100     Type F      OOOOOOFFFFFAAAAABBBBB___________
+    101     Type FI     OOOOOOFFFFFAAAAAIIIIIIIIIIIIIIII
+    110     Type B      OOOOOONNNNNNNNNNNNNNNNNNNNNNNNNN
+    111     Type S      Non standanrd op. code
 
-## Type A command ##
+LUT WORD
 
-+--------+-------+---+-------+---+
-| 11 - 8 | 7 - 4 | 3 | 2 - 1 | 0 |
-+--------+-------+---+-------+---+
-| OPC1   | OPC2  | D | A     | B |
-+--------+-------+---+-------+---+
+    +---------+---------+------+
+    | 15 - 12 | 11 - 1  | 0    |
+    +---------+---------+------+
+    | TYPE    | COMMAND | STOP |
+    +---------+---------+------+
 
-- OP1:
-	Arith. operation 2nd opcode
+    Type A command:
 
-- OP1:
-	Arith. operation 3rd opcode
-	
-- D:
-	1: r0
-	0: rD
+    +--------+-------+---+-------+---+
+    | 11 - 8 | 7 - 4 | 3 | 2 - 1 | 0 |
+    +--------+-------+---+-------+---+
+    | AOPC1  | AOPC2 | D | A     | B |
+    +--------+-------+---+-------+---+
 
-- A:
-	00: rA
-	01: rB
-	10: rD
-	11: r0
-	
-- B:
-	1: r0
-	0: rB
-	
-## Type I command ##
+    - AOPC1:
+            Arith. operation 1nd opcode
 
-+--------+-------+---+-------+---+
-| 11 - 6 | 5 - 4 | 3 | 2 - 1 | 0 |
-+--------+-------+---+-------+---+
-| OPC0   | I     | D | A     | R |
-+--------+-------+---+-------+---+
+    - AOPC2:
+            Arith. operation 2rd opcode
+            
+    - D:
+            1: r0
+            0: rD
 
-- OPC0:
-	Instruction opcode
-	
-- I:
-        00: Original immediate
-        01: Zero immediate
-        10: Custom immediate
-        11: Reserved
-	
-- D:
-	1: r0
-	0: rD
+    - A:
+            00: rA
+            01: rB
+            10: rD
+            11: r0
+            
+    - B:
+            1: r0
+            0: rB
+            
+    Type I command:
 
-- A:
-	00: rA
-	01: rB
-	10: rD
-	11: r0
-	
-## Type M command ##
+    +--------+-------+---+-------+---+
+    | 11 - 6 | 5 - 4 | 3 | 2 - 1 | 0 |
+    +--------+-------+---+-------+---+
+    | OPC    | I     | D | A     | R |
+    +--------+-------+---+-------+---+
 
-+--------+-------+---+-------+---+
-| 11 - 6 | 5 - 4 | 3 | 2 - 1 | 0 |
-+--------+-------+---+-------+---+
-| OPC0   | I     | R | A     | B |
-+--------+-------+---+-------+---+
+    - OPC:
+            Instruction opcode
+            
+    - I:
+            00: Original immediate
+            01: Zero immediate
+            10: Custom immediate
+            11: Reserved
+            
+    - D:
+            1: r0
+            0: rD
 
-- OPC0:
-	Instruction opcode
+    - A:
+            00: rA
+            01: rB
+            10: rD
+            11: r0
+            
+    Type M command:
 
-- I:
-        00: Original immediate
-        01: Zero immediate
-        10: Custom immediate
-        11: Reserved
+    +--------+-------+---+-------+---+
+    | 11 - 6 | 5 - 4 | 3 | 2 - 1 | 0 |
+    +--------+-------+---+-------+---+
+    | OPC    | I     | R | A     | B |
+    +--------+-------+---+-------+---+
 
-- A:
-	00: rA
-	01: rB
-	10: rD
-	11: r0
+    - OPC:
+            Instruction opcode
 
-- B:
-	1: r0
-	0: rB
+    - I:
+            00: Original immediate
+            01: Zero immediate
+            10: Custom immediate
+            11: Reserved
+
+    - A:
+            00: rA
+            01: rB
+            10: rD
+            11: r0
+
+    - B:
+            1: r0
+            0: rB
+
+    Type F command:
+
+    +--------+-------+-------+-------+---+
+    | 11 - 9 | 8 - 5 | 4 - 3 | 2 - 1 | 0 |
+    +--------+-------+-------+-------+---+
+    | FOPC   | R     | B     | A     | R |
+    +--------+-------+-------+-------+---+
+
+    - FOP:
+            Flag. operation opcode
+            
+    - A:
+            00: rA
+            01: rB
+            10: Reserved
+            11: r0
+            
+    - B:
+            00: rA
+            01: rB
+            10: Reserved
+            11: r0
+
+    Type FI command:
+
+    +--------+-------+-------+---+-------+---+
+    | 11 - 9 | 8 - 6 | 5 - 4 | I | 2 - 1 | 0 |
+    +--------+-------+-------+---+-------+---+
+    | FOPC   | R     | I     | R | A     | R |
+    +--------+-------+-------+---+-------+---+
+
+    - FOP:
+            Flag. operation opcode
+
+    - I:
+            00: Original immediate
+            01: Zero immediate
+            10: Custom immediate
+            11: Reserved
+            
+    - A:
+            00: rA
+            01: rB
+            10: Reserved
+            11: r0
