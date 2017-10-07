@@ -134,8 +134,8 @@ LUT WORD
             11: r0
             
     - B:
-            00: rA
-            01: rB
+            00: rB
+            01: rA
             10: Reserved
             11: r0
 
