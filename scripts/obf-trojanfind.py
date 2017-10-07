@@ -137,11 +137,11 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="Compare reference simulation output with obfuscated output to spot trojan triggers")
-    parser.add_argument("ref", type=str, required=True, help="reference file")
-    parser.add_argument("obf", type=str, required=True, help="obfuscated file")
-    parser.add_argument("-ml", "--min_length", type=int, required=True, help="min trigger length")
-    parser.add_argument("-Ml", "--max_length", type=int, required=True, help="max trigger length")
-    parser.add_argument("-c", "--count", type=int, required=True, help="how many times the trigger can appear")
+    parser.add_argument("ref", type=str, help="reference file")
+    parser.add_argument("obf", type=str, help="obfuscated file")
+    parser.add_argument("-ml", "--min_length", type=int, help="min trigger length")
+    parser.add_argument("-Ml", "--max_length", type=int, help="max trigger length")
+    parser.add_argument("-c", "--count", type=int, help="how many times the trigger can appear")
     parser.add_argument("-o", "--out", type=str, default="trojanfind.log", help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
@@ -163,20 +163,20 @@ def main():
     obf_file = open(obf_file_path)
 
     # Count instructions
-    logging.info("Counting reference file instructions...")
+    print("Counting reference file instructions...")
     ref_insn_cnt = sum(1 for line in ref_file)
-    logging.info("%d reference instructions to check", ref_insn_cnt)
+    print(ref_insn_cnt, "reference instructions to check")
     ref_file.seek(0)
-    logging.info("Counting obfuscated file instructions...")
+    print("Counting obfuscated file instructions...")
     obf_insn_cnt = sum(1 for line in obf_file)
-    logging.info("%d obfuscated instructions to check", obf_insn_cnt)
+    print(obf_insn_cnt, "obfuscated instructions to check")
     obf_file.seek(0)
 
     ##################################################
     # FIND TRIGGERS IN REFERENCE FILE
     ##################################################
 
-    logging.info("Finding candidate triggers in reference file...")
+    print("Finding candidate triggers in reference file...")
 
     bar = progressbar.ProgressBar(maxval=ref_insn_cnt, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
@@ -198,8 +198,7 @@ def main():
             # Check if matcher has been successfully initialized
             if(matcher.valid()):
                 # Add candidate to relative trigger list
-                candidate = matcher.insn_array
-                tlist_array[i].add(candidate)
+                tlist_array[i].add(matcher.insn_array)
 
         insn_index += 1
         bar.update(insn_index)
@@ -214,17 +213,11 @@ def main():
     for matcher in matcher_array:
         matcher.reset()
 
-    if args.debug:
-        logging.debug("Candidate triggers found:")
-        for tlist in tlist_array:
-            logging.debug("Trigger length %d:", tlist.length)
-            tlist.dump()
-
     ##################################################
     # MATCH TRIGGERS IN OBFUSCATED FILE
     ##################################################
 
-    logging.info("Matching triggers in obfuscated file...")
+    print("Matching triggers in obfuscated file...")
 
     bar = progressbar.ProgressBar(maxval=obf_insn_cnt, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
@@ -232,7 +225,7 @@ def main():
     insn_index = 0
     while not checkEOF(obf_file):
 
-        line = ref_file.readline()
+        line = obf_file.readline()
 
         # Get instruction
         insn = get_insn(line)
@@ -260,7 +253,7 @@ def main():
     # Obfuscated-reference length ratio
     or_ratio = float(obf_insn_cnt) / float(ref_insn_cnt)
 
-    # Candidate triggers found
+    # Triggers found/survived
     candidate_cnt = 0
     candidate_inst = 0
     survivor_cnt = 0
@@ -270,8 +263,11 @@ def main():
             candidate_cnt += 1
             candidate_inst += trigger.count
             survivor_inst += trigger.match
-            if not survivor_inst == 0:
+            if not trigger.match == 0:
                 survivor_cnt += 1
+
+    # Survival rate
+    survival_rate = float(survivor_inst)/float(candidate_inst)
 
     # Print stats
     # TODO print configuration for reference
@@ -282,6 +278,13 @@ def main():
     logging.info("Trigger instances: %d", candidate_inst)
     logging.info("Survivor triggers: %d", survivor_cnt)
     logging.info("Survivor instances: %d", survivor_inst)
+    logging.info("Survival rate: %f", survival_rate)
+
+    # Print survivors
+    for tlist in tlist_array:
+        for trigger in tlist.trigger_array:
+            if trigger.match > 0:
+                print(trigger.insn_array)
 
 
 if __name__ == '__main__':
