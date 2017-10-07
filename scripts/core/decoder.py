@@ -328,7 +328,6 @@ def decode(insn):
     # l.cust5
     elif opcode == OR1200_OR32_CUST5:
         alu_op = OR1200_ALUOP_CUST5
-
     # else
     else:
         alu_op = OR1200_ALUOP_NOP
@@ -675,12 +674,6 @@ def get_aop(insn):
         return OR1200_ALUOP_MOVHI
     elif insn == "l.mul":
         return OR1200_ALUOP_MUL
-    elif insn == "l.muld":
-        # TODO
-        pass
-    elif insn == "l.muldu":
-        # TODO
-        pass
     elif insn == "l.mulu":
         return OR1200_ALUOP_MULU
     elif insn == "l.or":

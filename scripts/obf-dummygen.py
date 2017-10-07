@@ -30,7 +30,7 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(args.out)
+    utils.init_logger(args.out, debug=args.debug)
 
     # Read files
     PATH_RES = utils.get_res_path()
@@ -46,6 +46,7 @@ def main():
     for insn in insn_list:
         # find dummy insn with max smd
         try:
+            logging.debug("Parsing %s", insn)
             insn_word = decoder.parse(insn)
         except ValueError:
             logging.warning("Unable to decode instruction %s", insn)
@@ -80,7 +81,7 @@ def main():
 
         # Print table
         for dummy in result[2]:
-            logging.info("{:<20}{:<25}{:<5.2f}{:.2f}".format(dummy[0], dummy[1], dummy[2], dummy[3]))
+            logging.info("{:<20}{:<40}{:<5.2f}{:.2f}".format(dummy[0], dummy[1], dummy[2], dummy[3]))
 
 
 if __name__ == '__main__':
