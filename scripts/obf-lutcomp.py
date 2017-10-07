@@ -15,6 +15,8 @@ INSN_TYPE_N = "000"
 INSN_TYPE_A = "001"
 INSN_TYPE_I = "010"
 INSN_TYPE_M = "011"
+INSN_TYPE_F = "100"
+INSN_TYPE_FI = "101"
 
 
 def remove_whitespace(x):
@@ -68,16 +70,31 @@ def get_A_field(x):
         raise ValueError
 
 
-def get_B_field(x):
-    if x == "r0":
-        # Use r0 as rB
-        return "1"
-    elif x == "rB":
-        # Use original rB
-        return "0"
+def get_B_field(x, type_Fx=False):
+    if type_Fx:
+        # Type F or FI
+        if x == "rB":
+            # Use original rB
+            return "00"
+        elif x == "rA":
+            # Use rA as rB
+            return "01"
+        elif x == "r0":
+            # Use r0 as rB
+            return "11"
+        else:
+            logging.error("%s cannot be used as rB", x)
+            raise ValueError
     else:
-        logging.error("%s cannot be used as rB", x)
-        raise ValueError
+        if x == "r0":
+            # Use r0 as rB
+            return "1"
+        elif x == "rB":
+            # Use original rB
+            return "0"
+        else:
+            logging.error("%s cannot be used as rB", x)
+            raise ValueError
 
 
 def get_I_field(x):
@@ -139,6 +156,12 @@ def get_lut_line(line, ref, stop):
         # Type M
         insn_type = INSN_TYPE_M
         logging.debug("Instruction %s is type M", line)
+    elif insn_opcode == decoder.OR1200_OR32_SFXX:
+        # Type F
+        insn_type = INSN_TYPE_F
+    elif insn_opcode == decoder.OR1200_OR32_SFXXI:
+        # Type FI
+        insn_type = INSN_TYPE_FI
     else:
         # Type N
         insn_type = INSN_TYPE_N
@@ -233,6 +256,45 @@ def get_lut_line(line, ref, stop):
         OP0_field = decoder.get_opcode(insn_name)
 
         lut_word = insn_type + OP0_field + I_field + "0" + A_field + B_field + stop_field
+        out_array.append(lut_word)
+
+        if I_field == "10":
+            out_array.append(bin_digits(insn_oper_split[2], 16))
+
+        return out_array
+
+    if insn_type == INSN_TYPE_F:
+
+        insn_oper_split = insn_oper.split(",")
+
+        if len(insn_oper_split) != 2:
+            # Error
+            logging.error("Unable to parse operands: %s", line)
+            raise ValueError
+
+        A_field = get_A_field(insn_oper_split[0])
+        B_field = get_B_field(insn_oper_split[1], True)
+        FOP_field = "0" + decoder.get_fopc(insn_name)
+
+        lut_word = insn_type + FOP_field + "0000" + B_field + A_field + "0" + stop_field
+        out_array.append(lut_word)
+
+        return out_array
+
+    if insn_type == INSN_TYPE_FI:
+
+        insn_oper_split = insn_oper.split(",")
+
+        if len(insn_oper_split) != 2:
+            # Error
+            logging.error("Unable to parse operands: %s", line)
+            raise ValueError
+
+        A_field = get_A_field(insn_oper_split[0])
+        I_field = get_I_field(insn_oper_split[1])
+        FOP_field = "0" + decoder.get_fopc(insn_name)
+
+        lut_word = insn_type + FOP_field + "000" + I_field + "0" + A_field + "0" + stop_field
         out_array.append(lut_word)
 
         if I_field == "10":

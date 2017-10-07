@@ -128,7 +128,6 @@ def parse(insn):
 
 
 def get_opcode(insn):
-
     if (insn == "l.add" or
             insn == "l.addc" or
             insn == "l.and" or
@@ -270,20 +269,17 @@ def get_opcode(insn):
     elif insn == "l.xori":
         return OR1200_OR32_XORI
     else:
-        # TODO
-        pass
-
-    logging.warning("(Decoder) Unable to get opcode of %s", insn)
-    raise ValueError
+        # Unknown instruction
+        raise ValueError
 
 
 def decode(insn):
 
     opcode = get_opcode(insn)
 
-    #
-    # Decode of alu_op
-    #
+    ##################################################
+    # DECODE OF ALU_OP
+    ##################################################
 
     # l.movhi
     if opcode == OR1200_OR32_MOVHI:
@@ -337,9 +333,9 @@ def decode(insn):
     else:
         alu_op = OR1200_ALUOP_NOP
 
-    #
-    # Decode of spr_read, spr_write
-    #
+    ##################################################
+    # DECODE OF SPR_READ, SPR_WRITE
+    ##################################################
 
     # l.mfspr
     if opcode == OR1200_OR32_MFSPR:
@@ -356,9 +352,9 @@ def decode(insn):
         spr_read = "0"
         spr_write = "0"
 
-    #
-    # Decode of id_lsu_op
-    #
+    ##################################################
+    # DECODE OF ID_LSU_OP
+    ##################################################
 
     # l.lwz
     if opcode == OR1200_OR32_LWZ:
@@ -400,9 +396,10 @@ def decode(insn):
     else:
         id_lsu_op = OR1200_LSUOP_NOP
 
-    #
-    # Decode of id_branch_op
-    #
+    ##################################################
+    # DECODE OF ID_BRANCH_OP
+    ##################################################
+
     # l.j
     if opcode == OR1200_OR32_J:
         id_branch_op = OR1200_BRANCHOP_J
@@ -435,9 +432,10 @@ def decode(insn):
     else:
         id_branch_op = OR1200_BRANCHOP_NOP
 
-    #
-    #  Decode of sel_imm
-    #
+    ##################################################
+    #  DECODE OF SEL_IMM
+    ##################################################
+
     # j.jalr
     if opcode == OR1200_OR32_JALR:
         sel_imm = "0"
@@ -501,9 +499,10 @@ def decode(insn):
     else:
         sel_imm = "1"
 
-    #
-    # Decode of rfwb_op
-    #
+    ##################################################
+    # DECODE OF RFWB_OP
+    ##################################################
+
     # j.jal
     if opcode == OR1200_OR32_JAL:
         rfwb_op = OR1200_RFWBOP_LR + "1"
@@ -583,9 +582,10 @@ def decode(insn):
     else:
         rfwb_op = OR1200_RFWBOP_NOP
 
-    #
-    # Decode of id_lsu_op
-    #
+    ##################################################
+    # DECODE OF ID_LSU_OP
+    ##################################################
+
     # l.lwz
     if opcode == OR1200_OR32_LWZ:
         id_lsu_op = OR1200_LSUOP_LWZ
@@ -626,75 +626,82 @@ def decode(insn):
     else:
         id_lsu_op = OR1200_LSUOP_NOP
 
+    ##################################################
+    # DECODE OF COMP_OP
+    ##################################################
+
+    if opcode == OR1200_OR32_SFXX or opcode == OR1200_OR32_SFXXI:
+        comp_op = get_fopc(insn)
+    else:
+        comp_op = "0000"
+
     du_word = alu_op + id_branch_op + id_lsu_op + \
-        spr_read + spr_write + sel_imm + rfwb_op + id_lsu_op
+        spr_read + spr_write + sel_imm + rfwb_op + id_lsu_op + comp_op
 
     return du_word
 
 
+# Internal ALU opcode
 def get_aop(insn):
     if insn == "l.add":
         return OR1200_ALUOP_ADD
-    if insn == "l.addc":
+    elif insn == "l.addc":
         return OR1200_ALUOP_ADDC
-    if insn == "l.and":
+    elif insn == "l.and":
         return OR1200_ALUOP_AND
-    if insn == "l.cmov":
+    elif insn == "l.cmov":
         return OR1200_ALUOP_CMOV
-    if insn == "l.div":
+    elif insn == "l.div":
         return OR1200_ALUOP_DIV
-    if insn == "l.divu":
+    elif insn == "l.divu":
         return OR1200_ALUOP_DIVU
-    if insn == "l.extbs":
+    elif insn == "l.extbs":
         return OR1200_ALUOP_EXTHB
-    if insn == "l.extbz":
+    elif insn == "l.extbz":
         return OR1200_ALUOP_EXTHB
-    if insn == "l.exths":
+    elif insn == "l.exths":
         return OR1200_ALUOP_EXTHB
-    if insn == "l.exthz":
+    elif insn == "l.exthz":
         return OR1200_ALUOP_EXTHB
-    if insn == "l.extws":
+    elif insn == "l.extws":
         return OR1200_ALUOP_EXTW
-    if insn == "l.extwz":
+    elif insn == "l.extwz":
         return OR1200_ALUOP_EXTW
-    if insn == "l.ff1":
+    elif insn == "l.ff1":
         return OR1200_ALUOP_FFL1
-    if insn == "l.fl1":
+    elif insn == "l.fl1":
         return OR1200_ALUOP_FFL1
-    if insn == "l.movhi":
+    elif insn == "l.movhi":
         return OR1200_ALUOP_MOVHI
-    if insn == "l.mul":
+    elif insn == "l.mul":
         return OR1200_ALUOP_MUL
-    if insn == "l.muld":
+    elif insn == "l.muld":
         # TODO
         pass
-    if insn == "l.muldu":
+    elif insn == "l.muldu":
         # TODO
         pass
-    if insn == "l.mulu":
+    elif insn == "l.mulu":
         return OR1200_ALUOP_MULU
-    if insn == "l.or":
+    elif insn == "l.or":
         return OR1200_ALUOP_OR
-    if insn == "l.ror":
+    elif insn == "l.ror":
         return OR1200_ALUOP_SHROT
-    if insn == "l.sll":
+    elif insn == "l.sll":
         return OR1200_ALUOP_SHROT
-    if insn == "l.sra":
+    elif insn == "l.sra":
         return OR1200_ALUOP_SHROT
-    if insn == "l.srl":
+    elif insn == "l.srl":
         return OR1200_ALUOP_SHROT
-    if insn == "l.sub":
+    elif insn == "l.sub":
         return OR1200_ALUOP_SUB
-    if insn == "l.xor":
+    elif insn == "l.xor":
         return OR1200_ALUOP_XOR
     else:
-        # TODO
-        pass
-
-    logging.warning("(Decoder) Unable to get ALU opcode of %s", insn)
-    raise ValueError
+        raise ValueError
 
 
+# Instruction ALU opcode
 def get_extra_opcode(insn):
     if insn == "l.add":
         return "00000000"
@@ -747,208 +754,233 @@ def get_extra_opcode(insn):
     if insn == "l.xor":
         return "00000101"
     else:
-        # TODO
-        pass
-
-    logging.warning("(Decoder) Unable to get extra opcode of %s", insn)
-    raise ValueError
+        # Unknown instruction
+        raise ValueError
 
 
+# Instruction/Internal flag opcode
+def get_fopc(name):
+    if name == "l.sfeq" or name == "l.sfeqi":
+        return "0000"
+    elif name == "l.sfges" or name == "l.sfgesi":
+        return "1011"
+    elif name == "l.sfgeu" or name == "l.sfgeui":
+        return "0011"
+    elif name == "l.sfgts" or name == "l.sfgtsi":
+        return "1010"
+    elif name == "l.sfgtu" or name == "l.sfgtu":
+        return "0010"
+    elif name == "l.sfles" or name == "l.sflesi":
+        return "1101"
+    elif name == "l.sfleu" or name == "l.sfleui":
+        return "0101"
+    elif name == "l.sflts" or name == "l.sfltsi":
+        return "1100"
+    elif name == "l.sfltu" or name == "l.sfltui":
+        return "0100"
+    elif name == "l.sfne" or name == "l.sfnei":
+        return "0001"
+    else:
+        # Unknown instruction
+        raise ValueError
+
+
+# Index used to LUT addressing and docs
 def get_index(name):
     if name == "l.j":
         return 0
-    if name == "l.jal":
+    elif name == "l.jal":
         return 1
-    if name == "l.bnf":
+    elif name == "l.bnf":
         return 2
-    if name == "l.bf":
+    elif name == "l.bf":
         return 3
-    if name == "l.nop":
+    elif name == "l.nop":
         return 4
-    if name == "l.macrc":
+    elif name == "l.macrc":
         return 5
-    if name == "l.movhi":
+    elif name == "l.movhi":
         return 6
-    if name == "l.sys":
+    elif name == "l.sys":
         return 7
-    if name == "l.trap":
+    elif name == "l.trap":
         return 8
-    if name == "l.msync":
+    elif name == "l.msync":
         return 9
-    if name == "l.psync":
+    elif name == "l.psync":
         return 10
-    if name == "l.csync":
+    elif name == "l.csync":
         return 11
-    if name == "l.rfe":
+    elif name == "l.rfe":
         return 12
-    if name == "l.jr":
+    elif name == "l.jr":
         return 13
-    if name == "l.jalr":
+    elif name == "l.jalr":
         return 14
-    if name == "l.maci":
+    elif name == "l.maci":
         return 15
-    if name == "l.cust1":
+    elif name == "l.cust1":
         return 16
-    if name == "l.cust2":
+    elif name == "l.cust2":
         return 17
-    if name == "l.cust3":
+    elif name == "l.cust3":
         return 18
-    if name == "l.cust4":
+    elif name == "l.cust4":
         return 19
-    if name == "l.ld":
+    elif name == "l.ld":
         return 20
-    if name == "l.lwz":
+    elif name == "l.lwz":
         return 21
-    if name == "l.lws":
+    elif name == "l.lws":
         return 22
-    if name == "l.lbz":
+    elif name == "l.lbz":
         return 23
-    if name == "l.lbs":
+    elif name == "l.lbs":
         return 24
-    if name == "l.lhz":
+    elif name == "l.lhz":
         return 25
-    if name == "l.lhs":
+    elif name == "l.lhs":
         return 26
-    if name == "l.addi":
+    elif name == "l.addi":
         return 27
-    if name == "l.addic":
+    elif name == "l.addic":
         return 28
-    if name == "l.andi":
+    elif name == "l.andi":
         return 29
-    if name == "l.ori":
+    elif name == "l.ori":
         return 30
-    if name == "l.xori":
+    elif name == "l.xori":
         return 31
-    if name == "l.muli":
+    elif name == "l.muli":
         return 32
-    if name == "l.mfspr":
+    elif name == "l.mfspr":
         return 33
-    if name == "l.slli":
+    elif name == "l.slli":
         return 34
-    if name == "l.srli":
+    elif name == "l.srli":
         return 35
-    if name == "l.srai":
+    elif name == "l.srai":
         return 36
-    if name == "l.rori":
+    elif name == "l.rori":
         return 37
-    if name == "l.sfeqi":
+    elif name == "l.sfeqi":
         return 38
-    if name == "l.sfnei":
+    elif name == "l.sfnei":
         return 39
-    if name == "l.sfgtui":
+    elif name == "l.sfgtui":
         return 40
-    if name == "l.sfgeui":
+    elif name == "l.sfgeui":
         return 41
-    if name == "l.sfltui":
+    elif name == "l.sfltui":
         return 42
-    if name == "l.sfleui":
+    elif name == "l.sfleui":
         return 43
-    if name == "l.sfgtsi":
+    elif name == "l.sfgtsi":
         return 44
-    if name == "l.sfgesi":
+    elif name == "l.sfgesi":
         return 45
-    if name == "l.sfltsi":
+    elif name == "l.sfltsi":
         return 46
-    if name == "l.sflesi":
+    elif name == "l.sflesi":
         return 47
-    if name == "l.mtspr":
+    elif name == "l.mtspr":
         return 48
-    if name == "l.mac":
+    elif name == "l.mac":
         return 49
-    if name == "l.macu":
+    elif name == "l.macu":
         return 50
-    if name == "l.msb":
+    elif name == "l.msb":
         return 51
-    if name == "l.msbu":
+    elif name == "l.msbu":
         return 52
-    if name == "l.swa":
+    elif name == "l.swa":
         return 53
-    if name == "l.sd":
+    elif name == "l.sd":
         return 54
-    if name == "l.sw":
+    elif name == "l.sw":
         return 55
-    if name == "l.sb":
+    elif name == "l.sb":
         return 56
-    if name == "l.sh":
+    elif name == "l.sh":
         return 57
-    if name == "l.exths":
+    elif name == "l.exths":
         return 58
-    if name == "l.extws":
+    elif name == "l.extws":
         return 59
-    if name == "l.extbs":
+    elif name == "l.extbs":
         return 60
-    if name == "l.extwz":
+    elif name == "l.extwz":
         return 61
-    if name == "l.exthz":
+    elif name == "l.exthz":
         return 62
-    if name == "l.extbz":
+    elif name == "l.extbz":
         return 63
-    if name == "l.add":
+    elif name == "l.add":
         return 64
-    if name == "l.addc":
+    elif name == "l.addc":
         return 65
-    if name == "l.sub":
+    elif name == "l.sub":
         return 66
-    if name == "l.and":
+    elif name == "l.and":
         return 67
-    if name == "l.or":
+    elif name == "l.or":
         return 68
-    if name == "l.xor":
+    elif name == "l.xor":
         return 69
-    if name == "l.cmov":
+    elif name == "l.cmov":
         return 70
-    if name == "l.ff1":
+    elif name == "l.ff1":
         return 71
-    if name == "l.sll":
+    elif name == "l.sll":
         return 72
-    if name == "l.srl":
+    elif name == "l.srl":
         return 73
-    if name == "l.sra":
+    elif name == "l.sra":
         return 74
-    if name == "l.ror":
+    elif name == "l.ror":
         return 75
-    if name == "l.fl1":
+    elif name == "l.fl1":
         return 76
-    if name == "l.mul":
+    elif name == "l.mul":
         return 77
-    if name == "l.muld":
+    elif name == "l.muld":
         return 78
-    if name == "l.div":
+    elif name == "l.div":
         return 79
-    if name == "l.divu":
+    elif name == "l.divu":
         return 80
-    if name == "l.mulu":
+    elif name == "l.mulu":
         return 81
-    if name == "l.muldu":
+    elif name == "l.muldu":
         return 82
-    if name == "l.sfeq":
+    elif name == "l.sfeq":
         return 83
-    if name == "l.sfne":
+    elif name == "l.sfne":
         return 84
-    if name == "l.sfgtu":
+    elif name == "l.sfgtu":
         return 85
-    if name == "l.sfgeu":
+    elif name == "l.sfgeu":
         return 86
-    if name == "l.sfltu":
+    elif name == "l.sfltu":
         return 87
-    if name == "l.sfleu":
+    elif name == "l.sfleu":
         return 88
-    if name == "l.sfgts":
+    elif name == "l.sfgts":
         return 89
-    if name == "l.sfges":
+    elif name == "l.sfges":
         return 90
-    if name == "l.sflts":
+    elif name == "l.sflts":
         return 91
-    if name == "l.sfles":
+    elif name == "l.sfles":
         return 92
-    if name == "l.cust5":
+    elif name == "l.cust5":
         return 93
-    if name == "l.cust6":
+    elif name == "l.cust6":
         return 94
-    if name == "l.cust7":
+    elif name == "l.cust7":
         return 95
-    if name == "l.cust8":
+    elif name == "l.cust8":
         return 96
-
-    logging.warning("(Decoder) Unable to get index of %s", name)
-    raise ValueError
+    else:
+        # Unknown instruction
+        raise ValueError

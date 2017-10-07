@@ -126,8 +126,8 @@ wire [4:0]  f_out_A     = sw_cmd[2:1] == 2'b00 ? f_in_A:
                           5'b00000;
 
 wire [4:0]  f_out_B     = (sw_type == `OBF_INSN_TYPE_F || sw_type == `OBF_INSN_TYPE_FI) ?
-                          sw_cmd[4:3] == 2'b00 ? f_in_A:
-                          sw_cmd[4:3] == 2'b01 ? f_in_B:
+                          sw_cmd[4:3] == 2'b00 ? f_in_B:
+                          sw_cmd[4:3] == 2'b01 ? f_in_A:
                           5'b00000: 
                           sw_cmd[0] ? 5'b00000 : f_in_B;
 
