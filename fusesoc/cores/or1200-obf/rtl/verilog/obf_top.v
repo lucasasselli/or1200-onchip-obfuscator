@@ -39,13 +39,38 @@ wire obf_init;
 wire obf_rst;
 wire obf_stop;
 wire obf_last;
+wire obf_en;
+
+wire obf_bypass = obf_init & if_stall; // Don't bypass if not obf_init or if obf is disabled
+wire real_id_freeze = id_freeze & !io_stall;
+
+//////////////////////////////////////////////////
+// KEY GENERATION
+//////////////////////////////////////////////////
 
 // TODO: Add key generator
 wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 
-// TODO: Evaluate using if_void
-wire obf_bypass = obf_init & if_stall; // Don't bypass if not obf_init
-wire real_id_freeze = id_freeze & !io_stall;
+reg [`OBF_ENCNT_WIDTH-1:0] obf_encnt_i;
+
+// Obfuscator enable counter
+always @(posedge clk or `OR1200_RST_EVENT rst) 
+begin
+    if (rst == `OR1200_RST_VALUE) begin
+        // Reset
+        obf_encnt_i = 0;
+    end
+    else begin
+        if(obf_last) begin
+            obf_encnt_i = obf_encnt_i + 1;
+        end
+        else begin
+            obf_encnt_i = obf_encnt_i;
+        end
+    end
+end
+
+assign obf_en = obf_encnt_i >= 16 ? 1'd1 : 1'd0;
 
 //////////////////////////////////////////////////
 // PSEUDO PROGRAM COUNTER (PPC)
@@ -134,6 +159,7 @@ obf_insngen obf_insngen_i(
     saved_insn,
     ppc_i,
     obf_key,
+    obf_en,
     obf_insn,
     obf_last,
     ppc_skip
@@ -269,14 +295,5 @@ begin
         end
     end
 end
-
-// Debug
-// synopsys translate_off
-always @(*) begin
-    if (id_flushpipe && ppc_i>0) begin
-	$display("A flush was issued while the obfuscator was running!");
-    end
-end
-// synopsys translate_on
 
 endmodule

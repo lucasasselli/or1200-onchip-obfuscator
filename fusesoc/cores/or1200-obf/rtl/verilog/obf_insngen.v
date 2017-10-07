@@ -15,6 +15,7 @@ module obf_insngen(
     ref_insn,
     ppc_i,
     obf_key,
+    obf_en,
     obf_insn,
     obf_last,
     obf_skip
@@ -23,6 +24,7 @@ module obf_insngen(
 input [31:0] ref_insn;
 input [`OBF_PPC_WIDTH-1:0] ppc_i;
 input [`OBF_KEY_WIDTH-1:0] obf_key;
+input obf_en;
 output reg [31:0] obf_insn;
 output obf_last;
 output obf_skip;
@@ -116,17 +118,23 @@ wire [15:0] f_out_I    = sw_cmd[5] ? lut_out_imm : sw_cmd[4]? 16'd0 : f_in_I;
 // Parse substitution command
 always @(*) 
 begin
-    // Type-field
-    case(sw_type)
-       `OBF_INSN_TYPE_A: obf_insn <= {`OR1200_OR32_ALU, f_out_D, f_out_A, f_out_B, 1'b0, f_out_OPC1, 2'b00, f_out_OPC2};
-       `OBF_INSN_TYPE_I: obf_insn <= {f_out_OPC0, f_out_D, f_out_A, f_out_I};
-       `OBF_INSN_TYPE_M: obf_insn <= {f_out_OPC0, f_out_I[15:11], f_out_A, f_out_B, f_out_I[10:0]};
-       `OBF_INSN_TYPE_N: obf_insn <= ref_insn;
-       default: obf_insn <= ref_insn; // TODO: Add some debug output
-    endcase
+    if(obf_en) begin
+        // Type-field
+        case(sw_type)
+           `OBF_INSN_TYPE_A: obf_insn <= {`OR1200_OR32_ALU, f_out_D, f_out_A, f_out_B, 1'b0, f_out_OPC1, 2'b00, f_out_OPC2};
+           `OBF_INSN_TYPE_I: obf_insn <= {f_out_OPC0, f_out_D, f_out_A, f_out_I};
+           `OBF_INSN_TYPE_M: obf_insn <= {f_out_OPC0, f_out_I[15:11], f_out_A, f_out_B, f_out_I[10:0]};
+           `OBF_INSN_TYPE_N: obf_insn <= ref_insn;
+           default: obf_insn <= ref_insn; // TODO: Add some debug output
+        endcase
+    end 
+    else begin
+        // Obfuscator disabled
+        obf_insn <= ref_insn;
+    end
 end
 
-assign obf_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) ? sw_cmd[5] : 1'b0;
-assign obf_last = sw_last;
+assign obf_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) & obf_en ? sw_cmd[5] : 1'b0;
+assign obf_last = obf_en ? sw_last : 1'd1;
 
 endmodule
