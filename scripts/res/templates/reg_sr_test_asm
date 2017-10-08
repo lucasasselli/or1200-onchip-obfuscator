@@ -1,4 +1,4 @@
-  #define NOP_REPORT_SR 0xf
+  #define NOP_REPORT_SR 0xd
 
   .section .data
 

@@ -68,9 +68,8 @@ class TestFile:
 
 class Tester:
 
-    result_array = []
-
     def __init__(self, sub_obj):
+        self.result_array = []
         self.sub_obj = sub_obj
 
     def __run_command(self, command):
@@ -144,8 +143,8 @@ class Tester:
 
         # If the instruction has no destiniation register, skip it
         if "rD" not in self.sub_obj.insn_sub:
-            logging.debug("(Result test) Substitution has no destination register: skipping...")
-            return False
+            logging.info("(Result test) Substitution has no destination register: skipping...")
+            return True
 
         # Generate main
         test_file_array = []
@@ -218,6 +217,7 @@ class Tester:
             return False
 
         if sub_result_array == ref_result_array:
+            logging.debug("(SR test) Passed!")
             return True
         else:
             logging.error("(SR test) Mismatch")

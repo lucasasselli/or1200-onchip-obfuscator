@@ -761,7 +761,7 @@ def get_fopc(name):
         return "0011"
     elif name == "l.sfgts" or name == "l.sfgtsi":
         return "1010"
-    elif name == "l.sfgtu" or name == "l.sfgtu":
+    elif name == "l.sfgtu" or name == "l.sfgtui":
         return "0010"
     elif name == "l.sfles" or name == "l.sflesi":
         return "1101"

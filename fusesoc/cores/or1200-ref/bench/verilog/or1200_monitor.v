@@ -353,11 +353,6 @@ module or1200_monitor;
 	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0002) begin
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop report (0x%h)", $time, r3);
-        // simulation reports_sr (l.nop d)
-        if (`OR1200_TOP.or1200_cpu.or1200_ctrl.wb_insn == 32'h1500_000d) begin 
-            sr = `OR1200_TOP.or1200_cpu.or1200_sprs.sr; // TODO do something better
-            $fdisplay(fgeneral, "%t: l.nop sr     (%h)", $time, sr);
-        end
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
 	   // Note that the 'expect' scripts in or1ksim's test suite look for strings
 	   // like "report(0x7ffffffe);", therefore something like "report (0x7ffffffe);"
@@ -365,13 +360,18 @@ module or1200_monitor;
 	   $display("report(0x%h);", r3);
 `endif
 	end
+        // simulation reports_sr (l.nop d)
+	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_000d) begin
+            sr = `OR1200_TOP.or1200_cpu.or1200_sprs.sr; // TODO do something better
+            $fdisplay(fgeneral, "%t: l.nop sr     (%h)", $time, sr);
+        end
 	// simulation printfs (l.nop 3)
 	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0003) begin
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop printf (%h)", $time, r3);
 	end
+	// simulation putc (l.nop 4)
 	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0004) begin
-	   // simulation putc (l.nop 4)
 	   get_gpr(3, r3);
 	   $write("%c", r3);
 	   $fdisplay(fgeneral, "%t: l.nop putc (%c)", $time, r3);
