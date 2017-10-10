@@ -16,6 +16,8 @@ module obf_top(
 );
 
 
+parameter sub_freq = 255;
+
 //////////////////////////////////////////////////
 // I/O 
 //////////////////////////////////////////////////
@@ -70,7 +72,7 @@ begin
     end
 end
 
-assign obf_en = obf_encnt_i >= 16 ? 1'd1 : 1'd0;
+assign obf_en = obf_encnt_i <= sub_freq ? 1'd1 : 1'd0;
 
 //////////////////////////////////////////////////
 // PSEUDO PROGRAM COUNTER (PPC)

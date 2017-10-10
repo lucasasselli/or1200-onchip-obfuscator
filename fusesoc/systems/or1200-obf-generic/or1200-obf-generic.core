@@ -40,3 +40,9 @@ top_module    = orpsoc_top
 
 [modelsim]
 vlog_options = +define+SIM +define+MODELSIM_SIM -timescale 1ns/1ps
+
+[parameter sub_freq]
+datatype    = int
+description = Substitution frequency (0 - 255)
+paramtype   = vlogparam
+scope       = private
