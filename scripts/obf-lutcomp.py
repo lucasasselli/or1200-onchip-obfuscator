@@ -111,6 +111,8 @@ def get_I_field(x):
 
 def get_lut_line(line, ref, stop):
 
+    logging.debug("RAW input: %s", line)
+
     line_find = re.findall(r"l\.", line)
 
     if len(line_find) == 0:
@@ -136,13 +138,25 @@ def get_lut_line(line, ref, stop):
         insn_oper = line_split[1]
 
     # Get instruction opcode
-    insn_opcode = decoder.get_opcode(insn_name)
+    try:
+        insn_opcode = decoder.get_opcode(insn_name)
+    except ValueError:
+        logging.error("Unable to get the opcode of %s", insn_name)
+        raise ValueError
 
     # Get instruction type
     if insn_opcode == decoder.OR1200_OR32_ALU:
         # Type A
         insn_type = INSN_TYPE_A
         logging.debug("Instruction %s is type A", line)
+    elif insn_opcode == decoder.OR1200_OR32_SFXX:
+        # Type F
+        insn_type = INSN_TYPE_F
+        logging.debug("Instruction %s is type F", line)
+    elif insn_opcode == decoder.OR1200_OR32_SFXXI:
+        # Type FI
+        insn_type = INSN_TYPE_FI
+        logging.debug("Instruction %s is type FI", line)
     elif(insn_opcode[:2] == "10" or
             insn_opcode == decoder.OR1200_OR32_MOVHI or
             insn_opcode == decoder.OR1200_OR32_RFE):
@@ -156,12 +170,6 @@ def get_lut_line(line, ref, stop):
         # Type M
         insn_type = INSN_TYPE_M
         logging.debug("Instruction %s is type M", line)
-    elif insn_opcode == decoder.OR1200_OR32_SFXX:
-        # Type F
-        insn_type = INSN_TYPE_F
-    elif insn_opcode == decoder.OR1200_OR32_SFXXI:
-        # Type FI
-        insn_type = INSN_TYPE_FI
     else:
         # Type N
         insn_type = INSN_TYPE_N
@@ -276,7 +284,7 @@ def get_lut_line(line, ref, stop):
         B_field = get_B_field(insn_oper_split[1], True)
         FOP_field = "0" + decoder.get_fopc(insn_name)
 
-        lut_word = insn_type + FOP_field + "0000" + B_field + A_field + "0" + stop_field
+        lut_word = insn_type + FOP_field + "00" + B_field + A_field + "0" + stop_field
         out_array.append(lut_word)
 
         return out_array
@@ -294,11 +302,11 @@ def get_lut_line(line, ref, stop):
         I_field = get_I_field(insn_oper_split[1])
         FOP_field = "0" + decoder.get_fopc(insn_name)
 
-        lut_word = insn_type + FOP_field + "000" + I_field + "0" + A_field + "0" + stop_field
+        lut_word = insn_type + FOP_field + "0" + I_field + "0" + A_field + "0" + stop_field
         out_array.append(lut_word)
 
         if I_field == "10":
-            out_array.append(bin_digits(insn_oper_split[2], 16))
+            out_array.append(bin_digits(insn_oper_split[1], 16))
 
         return out_array
 
