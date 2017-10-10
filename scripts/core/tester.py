@@ -207,10 +207,13 @@ class Tester:
 
         test_file_array = []
         test_file_array.append(TestFile("reg_sr_main_c", None, "main.c", False))
-        test_file_array.append(TestFile("reg_sr_test_asm", self.sub_obj.insn_ref, "test.S"))
+        test_file_array.append(TestFile("reg_sr_test_asm", self.sub_obj.insn_sub, "test.S"))
 
         result = self.__simulate(test_file_array)
         sub_result_array = self.result_array
+
+        logging.debug(ref_result_array)
+        logging.debug(sub_result_array)
 
         if not result:
             logging.error("(SR test) Unable to deploy substitution test")
