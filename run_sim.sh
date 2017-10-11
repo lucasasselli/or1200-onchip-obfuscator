@@ -6,9 +6,11 @@ SIMULATOR=modelsim-gui
 TARGET_NAME=obf
 
 ELF_SET=false
+LOG_RESULT=false
+SUB_FREQ=255
 
 # Parse arguments
-while getopts ":s:t:e:" opt; do
+while getopts ":s:t:e:f:l" opt; do
     case $opt in
         s)
             SIMULATOR=$OPTARG
@@ -19,6 +21,12 @@ while getopts ":s:t:e:" opt; do
         e)
             ELF_FILE=$OPTARG
             ELF_SET=true
+            ;;
+        l)
+            LOG_RESULT=true
+            ;;
+        f)
+            SUB_FREQ=$OPTARG
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -32,12 +40,10 @@ while getopts ":s:t:e:" opt; do
 done
 
 # Check mandatory inputs
-
 if [ "$ELF_FILE" == false ]; then
     echo "You must specify a .elf file!" >&2
     exit 1
 fi
-
 
 # Get elf info
 ELF_DIR=$(dirname $ELF_FILE)
@@ -49,10 +55,13 @@ if [ ! -d "$ELF_DIR" ]; then
     exit 1
 fi
 
+EXTRA_ARGS=""
+
 # Print info and set stuff
 case $TARGET_NAME in
     obf)
         TARGET_SYS=or1200-obf-generic
+        EXTRA_ARGS+="--sub_freq "$SUB_FREQ
         echo "RUNNING TEST ON OBFUSCATOR"
         ;;
     ref)
@@ -78,15 +87,16 @@ fi
 if [ "$SIMULATOR" = "modelsim-gui" ]; then
     # Modelsim GUI
     SIMULATOR=modelsim # Cheap but easy
-    fusesoc --cores-root=fusesoc sim --build-only --sim=modelsim $TARGET_SYS --elf-load $ELF_FILE
+    fusesoc --cores-root=fusesoc sim --build-only --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
     cd build/${TARGET_SYS}_0/sim-modelsim
     vsim -do fusesoc_run.tcl 
 else
     # Any other
-    fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE
+    fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
+
 fi
 
-if [ ! "$SIMULATOR" == "verilator" ]; then
+if [ ! "$SIMULATOR" == "verilator" ] && [ "$LOG_RESULT" == "true" ]; then
     # Move generated output to output folder
     RES_DIR=build/${TARGET_SYS}_0/sim-${SIMULATOR}
     OUT_DIR=${OUT_DIR}/${ELF_NAME}
