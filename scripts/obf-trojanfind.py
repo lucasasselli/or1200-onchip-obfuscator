@@ -2,9 +2,8 @@
 import argparse
 import logging
 import progressbar
-import os.path
 
-from core import utils
+from core import common
 from core import decoder
 
 
@@ -144,7 +143,7 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(args.out, debug=args.debug)
+    common.init_logger(args.out, debug=args.debug)
 
     # Create matchers/list
     matcher_array = []

@@ -3,8 +3,10 @@ import re
 import subprocess
 import logging
 import shutil
+import xlrd
 
-from core import utils
+from core import common
+from core import decoder
 
 # Constants
 SIMULATOR = "icarus"
@@ -24,14 +26,95 @@ OPERAND_REXP = ["rA", "rB", "rD", "I|N|K", "L"]
 # This is bad, I should feel bad. :-(
 # TODO: Change it
 OPERAND_SUBS = [
-                ("r3", "r4", "r31", "8", "8"),
-                ("r0", "r4", "r31", "8", "8"),
-                ("r3", "r0", "r31", "8", "8"),
-                ("r0", "r0", "r31", "8", "8"),
-                ("r31", "r4", "r31", "8", "8"),
-                ("r3", "r31", "r31", "8", "8"),
-                ("r31", "r31", "r31", "8", "8")
-                ]
+    ("r3", "r4", "r31", "8", "8"),
+    ("r0", "r4", "r31", "8", "8"),
+    ("r3", "r0", "r31", "8", "8"),
+    ("r0", "r0", "r31", "8", "8"),
+    ("r31", "r4", "r31", "8", "8"),
+    ("r3", "r31", "r31", "8", "8"),
+    ("r31", "r31", "r31", "8", "8")
+]
+
+
+class InsnSub:
+
+    def __init__(self, ref, sub):
+        self.insn_ref = ref
+        self.insn_sub = sub
+        self.test = Tester(self)
+
+    def _get_sub_dword_array(self):
+        sub_dword_array = []
+
+        for insn in self.insn_sub.split():
+            if "l." in insn:
+                temp_dword = decoder.parse(insn)
+                sub_dword_array.append(temp_dword)
+
+        return sub_dword_array
+
+    def __get_score(self, mode):
+        try:
+            ref_dword = decoder.parse(self.insn_ref)
+            sub_dword_array = self._get_sub_dword_array()
+        except ValueError:
+            return -1
+
+        scores = []
+
+        for sub_dword in sub_dword_array:
+            scores.append(common.dscore(ref_dword, sub_dword, mode))
+
+        return sum(scores) / float(len(scores))
+
+    def get_score_jaccd(self):
+        return self.__get_score("jaccd")
+
+    def get_score_smd(self):
+        return self.__get_score("smd")
+
+    def run_result_test(self):
+        return self.test.run_result_test()
+
+    def run_sr_test(self):
+        return self.test.run_sr_test()
+
+
+def load_sub_table(f, skip_header=True):
+
+    insn_ref_array = []
+    insn_sub_table = []
+
+    wb = xlrd.open_workbook(f)
+    sh = wb.sheet_by_index(0)
+
+    for row_index in range(sh.nrows):
+
+        # Skip header
+        if skip_header and row_index == 0:
+            continue
+
+        row_values = sh.row_values(row_index)
+
+        insn_ref_field = row_values[0]
+        insn_ref_array.append(insn_ref_field)
+
+        insn_sub_array = []
+
+        for j in range(1, len(row_values)):
+
+            insn_sub_field = row_values[j]
+
+            # Skip empty rows
+            if not insn_sub_field:
+                break
+
+            insn_sub = InsnSub(insn_ref_field, insn_sub_field)
+            insn_sub_array.append(insn_sub)
+
+        insn_sub_table.append(insn_sub_array)
+
+    return insn_ref_array, insn_sub_table
 
 
 class TestFile:
@@ -44,7 +127,7 @@ class TestFile:
 
     def write(self, operand_index):
         # Read in the file
-        res_path = utils.get_res_path()
+        res_path = common.get_res_path()
 
         template_path = os.path.join(res_path, DIR_TEMPLATES, self.template_name)
         output_path = os.path.join(PATH_WORK, DIR_TEST, self.output_name)
@@ -88,8 +171,8 @@ class Tester:
 
     def __simulate(self, test_file_array, operand_index=0):
 
-        res_path = utils.get_res_path()
-        root_path = utils.get_root_path()
+        res_path = common.get_res_path()
+        root_path = common.get_root_path()
 
         # Clear work directory
         if os.path.exists(PATH_WORK):

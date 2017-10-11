@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import argparse
 import logging
-from core import utils
+from core import common
+from core import tester
 from core import decoder
 import re
 import os
@@ -315,7 +316,7 @@ def get_lut_line(line, ref, stop):
 
 def write_out_file(out_file, template_file, sub_array):
     # Read in the file
-    res_path = utils.get_res_path()
+    res_path = common.get_res_path()
 
     template_path = os.path.join(res_path, template_file)
 
@@ -339,10 +340,10 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(debug=args.debug)
+    common.init_logger(debug=args.debug)
 
     # Read table
-    insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
+    insn_ref_array, insn_sub_table = tester.load_sub_table(args.file)
 
     # Compile
     logging.info("Compiler running...")

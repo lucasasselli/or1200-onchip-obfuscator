@@ -5,7 +5,7 @@ import logging
 import progressbar
 import os.path
 
-from core import utils
+from core import common
 
 BLOCK_LENGTH = 9
 STRIKE_LIMIT = 1
@@ -91,7 +91,7 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(args.out, debug=args.debug)
+    common.init_logger(args.out, debug=args.debug)
 
     # Read files
     ref_file_path = args.ref

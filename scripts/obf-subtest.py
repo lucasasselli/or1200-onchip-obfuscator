@@ -2,7 +2,8 @@
 import argparse
 import logging
 
-from core import utils
+from core import common
+from core import tester
 
 # Constants
 EXEC_MODE_SINGLE = 0
@@ -65,10 +66,10 @@ def main():
     score_only = args.scoreonly
 
     # Logger
-    utils.init_logger(args.out, debug=args.debug)
+    common.init_logger(args.out, debug=args.debug)
 
     # Read table
-    insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
+    insn_ref_array, insn_sub_table = tester.load_sub_table(args.file)
 
     # Execution mode
     if(args.i >= 0):
