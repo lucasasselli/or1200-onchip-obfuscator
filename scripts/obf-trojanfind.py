@@ -2,6 +2,7 @@
 import argparse
 import logging
 import progressbar
+import os.path
 
 from core import utils
 from core import decoder
@@ -131,18 +132,14 @@ def get_insn(line):
 
 def main():
 
-    ##################################################
-    # SETUP
-    ##################################################
-
     # Parse arguments
     parser = argparse.ArgumentParser(description="Compare reference simulation output with obfuscated output to spot trojan triggers")
     parser.add_argument("ref", type=str, help="reference file")
     parser.add_argument("obf", type=str, help="obfuscated file")
-    parser.add_argument("-ml", "--min_length", type=int, help="min trigger length")
-    parser.add_argument("-Ml", "--max_length", type=int, help="max trigger length")
-    parser.add_argument("-c", "--count", type=int, help="how many times the trigger can appear")
-    parser.add_argument("-o", "--out", type=str, default="trojanfind.log", help="log file")
+    parser.add_argument("min_length", type=int, help="min trigger length")
+    parser.add_argument("max_length", type=int, help="max trigger length")
+    parser.add_argument("count", type=int, help="how many times the trigger can appear")
+    parser.add_argument("-o", "--out", type=str, help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 
@@ -159,8 +156,18 @@ def main():
     # Read files
     ref_file_path = args.ref
     obf_file_path = args.obf
-    ref_file = open(ref_file_path)
-    obf_file = open(obf_file_path)
+
+    try:
+        ref_file = open(ref_file_path, "r")
+    except IOError:
+        logging.error("Unable to open reference file %s!", ref_file_path)
+        exit(1)
+
+    try:
+        obf_file = open(obf_file_path, "r")
+    except IOError:
+        logging.error("Unable to open obfuscator file %s!", obf_file_path)
+        exit(1)
 
     # Count instructions
     print("Counting reference file instructions...")
@@ -172,10 +179,7 @@ def main():
     print(obf_insn_cnt, "obfuscated instructions to check")
     obf_file.seek(0)
 
-    ##################################################
     # FIND TRIGGERS IN REFERENCE FILE
-    ##################################################
-
     print("Finding candidate triggers in reference file...")
 
     bar = progressbar.ProgressBar(maxval=ref_insn_cnt, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -213,10 +217,7 @@ def main():
     for matcher in matcher_array:
         matcher.reset()
 
-    ##################################################
     # MATCH TRIGGERS IN OBFUSCATED FILE
-    ##################################################
-
     print("Matching triggers in obfuscated file...")
 
     bar = progressbar.ProgressBar(maxval=obf_insn_cnt, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -246,10 +247,6 @@ def main():
 
     bar.finish()
 
-    ##################################################
-    # STATISTICS
-    ##################################################
-
     # Obfuscated-reference length ratio
     or_ratio = float(obf_insn_cnt) / float(ref_insn_cnt)
 
@@ -273,18 +270,18 @@ def main():
     # TODO print configuration for reference
     logging.info("Reference length: %d", ref_insn_cnt)
     logging.info("Obfuscated length: %d", obf_insn_cnt)
-    logging.info("OR ratio: %f", or_ratio)
-    logging.info("Trigger candidates: %d", candidate_cnt)
-    logging.info("Trigger instances: %d", candidate_inst)
+    logging.info("Instruction dilation: %f", or_ratio)
+    logging.info("Candidate trigger: %d", candidate_cnt)
+    logging.info("Candidate instances: %d", candidate_inst)
     logging.info("Survivor triggers: %d", survivor_cnt)
     logging.info("Survivor instances: %d", survivor_inst)
     logging.info("Survival rate: %f", survival_rate)
 
-    # Print survivors
-    for tlist in tlist_array:
-        for trigger in tlist.trigger_array:
-            if trigger.match > 0:
-                print(trigger.insn_array)
+    ## Print survivors
+    # for tlist in tlist_array:
+    #     for trigger in tlist.trigger_array:
+    #         if trigger.match > 0:
+    #             print(trigger.insn_array)
 
 
 if __name__ == '__main__':

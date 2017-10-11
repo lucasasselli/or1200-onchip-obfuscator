@@ -3,6 +3,7 @@ import re
 import argparse
 import logging
 import progressbar
+import os.path
 
 from core import utils
 
@@ -35,7 +36,7 @@ class ExBlock():
                 result_array = re.findall(r"EXECUTED: (.*?):", line)
                 if len(result_array) == 0:
                     logging.error("File alignment broken!")
-                    exit()
+                    exit(1)
                 else:
                     self.pc = result_array[0]
             else:
@@ -85,7 +86,7 @@ def main():
     parser = argparse.ArgumentParser(description="Compare reference simulation output with obfuscated output")
     parser.add_argument("ref", type=str, help="reference file")
     parser.add_argument("sim", type=str, help="test file")
-    parser.add_argument("-o", "--out", type=str, default="outcheck.log", help="log file")
+    parser.add_argument("-o", "--out", type=str, help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 
@@ -95,8 +96,18 @@ def main():
     # Read files
     ref_file_path = args.ref
     sim_file_path = args.sim
-    ref_file = open(ref_file_path)
-    sim_file = open(sim_file_path)
+
+    if os.path.isfile(ref_file_path):
+        ref_file = open(ref_file_path)
+    else:
+        logging.error("Unable to open reference file %s!", ref_file_path)
+        exit(1)
+
+    if os.path.isfile(sim_file_path):
+        sim_file = open(sim_file_path)
+    else:
+        logging.error("Unable to open simulator file %s!", sim_file_path)
+        exit(1)
 
     # Count lines
     logging.info("Counting blocks...")

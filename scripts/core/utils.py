@@ -128,7 +128,7 @@ class LogFormatter(logging.Formatter):
         return formatted
 
 
-def init_logger(log_file="", debug=False, log_to_file=True):
+def init_logger(log_file="", debug=False):
     logger = logging.getLogger()
 
     if debug:
@@ -136,7 +136,7 @@ def init_logger(log_file="", debug=False, log_to_file=True):
     else:
         logger.setLevel(logging.INFO)
 
-    if log_to_file:
+    if log_file:
         file_handler = logging.FileHandler(log_file, mode="w")
         file_handler.setFormatter(LogFormatter(monochrome=1))
         logger.addHandler(file_handler)

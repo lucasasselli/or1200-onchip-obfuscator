@@ -57,7 +57,7 @@ def main():
     parser = argparse.ArgumentParser(description="Test Open RISC 1000 instruction set substitutions")
     parser.add_argument("file", type=str, help="input file")
     parser.add_argument("-i", type=int, default=-1, help="instruction to test")
-    parser.add_argument("-o", "--out", type=str, default="subtest.log", help="log file")
+    parser.add_argument("-o", "--out", type=str, help="log file")
     parser.add_argument("-s", "--scoreonly", action='store_true', help="compute only substitution scores")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()

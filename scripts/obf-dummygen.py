@@ -25,7 +25,7 @@ def list_from_file(file_path):
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Compute Open RISC 1000 optimal dummy instruction set substitution.")
-    parser.add_argument("-o", "--out", type=str, default="dummygen.log", help="log file")
+    parser.add_argument("-o", "--out", type=str, help="log file")
     parser.add_argument("-d", "--debug", action='store_true', help="enable debug output")
     args = parser.parse_args()
 

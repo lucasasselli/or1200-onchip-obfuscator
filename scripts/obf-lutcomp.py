@@ -339,7 +339,7 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(debug=args.debug, log_to_file=False)
+    utils.init_logger(debug=args.debug)
 
     # Read table
     insn_ref_array, insn_sub_table = utils.load_sub_table(args.file)
