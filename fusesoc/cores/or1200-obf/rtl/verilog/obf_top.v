@@ -16,8 +16,6 @@ module obf_top(
 );
 
 
-parameter sub_freq = 255;
-
 //////////////////////////////////////////////////
 // I/O 
 //////////////////////////////////////////////////
@@ -43,8 +41,18 @@ wire obf_stop;
 wire obf_last;
 wire obf_en;
 
-wire obf_bypass = obf_init & if_stall; // Don't bypass if not obf_init or if obf is disabled
+// Current IF insn and PC
+wire [31:0] saved_insn;
+wire [31:0] saved_pc;
+
+// Bypass insn directly to output while IF is stalling
+wire obf_bypass = obf_init & if_stall;
+
+// Prevent feedback between io_stall and id_freeze
 wire real_id_freeze = id_freeze & !io_stall;
+
+// Enables counters (ppc and encnt)
+wire cnt_en = !obf_bypass & !real_id_freeze & !obf_stop;
 
 //////////////////////////////////////////////////
 // KEY GENERATION
@@ -56,6 +64,7 @@ wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 reg [`OBF_ENCNT_WIDTH-1:0] obf_encnt_i;
 
 // Obfuscator enable counter
+wire encnt_en = cnt_en & obf_last;
 always @(posedge clk or `OR1200_RST_EVENT rst) 
 begin
     if (rst == `OR1200_RST_VALUE) begin
@@ -63,7 +72,7 @@ begin
         obf_encnt_i = 0;
     end
     else begin
-        if(obf_last) begin
+        if(encnt_en) begin
             obf_encnt_i = obf_encnt_i + 1;
         end
         else begin
@@ -72,7 +81,8 @@ begin
     end
 end
 
-assign obf_en = obf_encnt_i <= sub_freq ? 1'd1 : 1'd0;
+wire if_void = (saved_insn[31:26] == `OR1200_OR32_NOP) & saved_insn[16]; 
+assign obf_en = (obf_encnt_i <= `sub_freq) & !if_void ? 1'd1 : 1'd0; // TODO Change as soon an keygen is designed
 
 //////////////////////////////////////////////////
 // PSEUDO PROGRAM COUNTER (PPC)
@@ -80,7 +90,7 @@ assign obf_en = obf_encnt_i <= sub_freq ? 1'd1 : 1'd0;
 
 reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
 
-wire ppc_en = !obf_bypass & !real_id_freeze & !obf_stop;
+wire ppc_en = cnt_en;
 wire ppc_rst = obf_last | obf_rst;
 wire ppc_skip;
 
@@ -125,9 +135,6 @@ end
 
 reg [31:0] saved_insn_reg;
 reg [31:0] saved_pc_reg;
-
-wire [31:0] saved_insn;
-wire [31:0] saved_pc;
 
 assign saved_insn = obf_init ? if_insn : saved_insn_reg;
 assign saved_pc = obf_init ? if_pc : saved_pc_reg;
