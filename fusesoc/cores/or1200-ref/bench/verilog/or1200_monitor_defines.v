@@ -85,6 +85,8 @@
 `define OR1K_RA_POS 20:16
 `define OR1K_RB_POS 15:11
 `define OR1K_ALU_OP_POS 3:0
+`define OR1K_EXT_POS 9:6
+`define OR1K_FFL1_POS 9:8
 
 `define OR1K_SHROT_OP_POS 7:6
 `define OR1K_SHROTI_IMM_POS 5:0

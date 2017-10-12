@@ -361,7 +361,7 @@ module or1200_monitor;
 `endif
 	end
         // simulation reports_sr (l.nop d)
-        if (`OR1200_TOP.or1200_cpu.or1200_ctrl.wb_insn == 32'h1500_000d) begin 
+	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_000d) begin
             sr = `OR1200_TOP.or1200_cpu.or1200_sprs.sr; // TODO do something better
             $fdisplay(fgeneral, "%t: l.nop sr     (%h)", $time, sr);
         end
@@ -370,8 +370,8 @@ module or1200_monitor;
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop printf (%h)", $time, r3);
 	end
+	// simulation putc (l.nop 4)
 	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0004) begin
-	   // simulation putc (l.nop 4)
 	   get_gpr(3, r3);
 	   $write("%c", r3);
 	   $fdisplay(fgeneral, "%t: l.nop putc (%c)", $time, r3);
@@ -1431,6 +1431,8 @@ end
 
       reg [3:0]    alu_op;
       reg [1:0]    shrot_op;
+      reg [3:0]    ext_op; 
+      reg [1:0]    ffl1_op; 
 
       reg [5:0]    shroti_imm;
 
@@ -1462,6 +1464,12 @@ end
 
 	 // Set flag op
 	 sf_op = insn[`OR1K_SF_OP];
+
+         // Extend op
+         ext_op = insn[`OR1K_EXT_POS];
+
+         // FFL1 op
+         ffl1_op = insn[`OR1K_FFL1_POS];
 
 	 // Xsync/syscall/trap opcode
 	 xsync_op = insn[`OR1K_XSYNC_OP_POS];
@@ -1631,6 +1639,37 @@ end
 		    $fwrite(finsn,"l.divu ");
 		  `OR1200_ALUOP_CMOV:
 		    $fwrite(finsn,"l.cmov ");
+		  `OR1200_ALUOP_EXTW:
+                    begin
+                        case(ext_op)
+                            4'b0000:
+                             $fwrite(finsn, "l.extws ");
+                            4'b0001:
+                             $fwrite(finsn, "l.extwz ");
+                        endcase
+                    end
+		  `OR1200_ALUOP_EXTHB:
+                    begin
+                        case(ext_op)
+                            4'b0001:
+                             $fwrite(finsn, "l.extbs ");
+                            4'b0011:
+                             $fwrite(finsn, "l.extbz ");
+                            4'b0000:
+                             $fwrite(finsn, "l.exths ");
+                            4'b0010:
+                             $fwrite(finsn, "l.exthz ");
+                        endcase
+                    end
+		  `OR1200_ALUOP_FFL1:
+                    begin
+                        case(ffl1_op)
+                            2'b00:
+                             $fwrite(finsn, "l.ff1 ");
+                            2'b01:
+                             $fwrite(finsn, "l.fl1 ");
+                        endcase
+                    end
 		endcase // case (alu_op)
 		$fwrite(finsn,"r%0d,r%0d,r%0d",rD_num,rA_num,rB_num);
 	     end
