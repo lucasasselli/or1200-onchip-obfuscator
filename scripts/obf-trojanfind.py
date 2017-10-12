@@ -30,7 +30,12 @@ class Trigger():
     def get_id(self):
         trigger_id = ""
         for insn in self.insn_array:
-            trigger_id += str(decoder.get_index(insn))
+            try:
+                index = decoder.get_index(insn)
+            except ValueError:
+                logging.error("Unable to get index of instruction %s", insn)
+                exit(1)
+            trigger_id += str(index)
         return trigger_id
 
 
