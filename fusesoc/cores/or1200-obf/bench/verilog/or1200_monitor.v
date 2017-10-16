@@ -1427,7 +1427,7 @@ end
       reg [4:0]    rD_num, rA_num, rB_num;
       reg [31:0]   rA_val, rB_val;
       reg [15:0]   imm_16bit;
-      reg [10:0]   imm_split16bit;
+      reg [15:0]   imm_split16bit;
 
       reg [3:0]    alu_op;
       reg [1:0]    shrot_op;

@@ -21,11 +21,11 @@ files =
  bench/verilog/wb_intercon.vh[is_include_file]
  bench/verilog/wb_intercon.v
  bench/verilog/orpsoc_top.v
+ bench/verilog/include/timescale.v[is_include_file]
 file_type = verilogSource
 
 [fileset tb]
 files =
- bench/verilog/include/timescale.v[is_include_file]
  bench/verilog/orpsoc_tb.v
 file_type = verilogSource
 usage = sim
@@ -35,8 +35,10 @@ iverilog_options = -DSIM
 
 [verilator]
 verilator_options = -Wno-fatal --trace
-tb_toplevel   = bench/verilator/tb.cpp
-top_module    = orpsoc_top
+include_files     = bench/verilator/decoder/decoder.h
+cli_parser        = fusesoc
+tb_toplevel       = bench/verilator/tb.cpp
+top_module        = orpsoc_top
 
 [modelsim]
 vlog_options = +define+SIM +define+MODELSIM_SIM -timescale 1ns/1ps
