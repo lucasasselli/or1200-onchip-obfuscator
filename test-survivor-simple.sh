@@ -1,13 +1,14 @@
 #!/bin/bash
-ELF_NAME=hello
-ELF_PATH=sw/hello/hello.elf
+ELF_NAME=susan-small-corners
+ELF_PATH=/home/luca/dev/hw-obfuscator/sw/or1k-mibench/automotive/susan/susan-small-corners.elf
+SIMULATOR=verilator
 SAMPLES="0 25 50 100 125 150 175 200 225 250"
 
 set -e
 
 # Run reference
 echo "-> Running reference simulation..."
-./run-sim.sh -e $ELF_PATH -t ref -s icarus -l &> /dev/null
+./run-sim.sh -e $ELF_PATH -t ref -s $SIMULATOR -l &> /dev/null
 
 # Run obfuscator
 for i in $SAMPLES; do
@@ -16,11 +17,11 @@ for i in $SAMPLES; do
     echo "--------------------------------------------------"
 
     echo "-> Running obfuscator simulation..."
-    ./run-sim.sh -e $ELF_PATH -t obf -s icarus -f $i -l &> /dev/null
+    ./run-sim.sh -e $ELF_PATH -t obf -s $SIMULATOR -f $i -l &> /dev/null
 
-    echo "-> Checking code correctness..."
-    obf-outcheck.py build/or1200-ref-generic_0/sim-icarus/tb-executed.log build/or1200-obf-generic_0/sim-icarus/tb-executed.log
+    # echo "-> Checking code correctness..."
+    # obf-outcheck.py build/or1200-ref-generic_0/sim-icarus/tb-executed.log build/or1200-obf-generic_0/sim-icarus/tb-executed.log
 
     echo "-> Looking for trojans..."
-    obf-trojanfind.py out/hello/ref_${ELF_NAME}.exec out/hello/obf_${ELF_NAME}_$i.exec 5 10 10
+    obf-trojanfind.py out/${SIMULATOR}_${ELF_NAME}/ref_${ELF_NAME}.exec out/${SIMULATOR}_${ELF_NAME}/obf_${ELF_NAME}_$i.exec 5 10 5
 done

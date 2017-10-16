@@ -83,23 +83,34 @@ if [ ! -f "$ELF_FILE" ]; then
     exit 1
 fi
 
-# Start simulation
-if [ "$SIMULATOR" = "modelsim-gui" ]; then
-    # Modelsim GUI
-    SIMULATOR=modelsim # Cheap but easy
-    fusesoc --cores-root=fusesoc sim --build-only --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
-    cd build/${TARGET_SYS}_0/sim-modelsim
-    vsim -do fusesoc_run.tcl 
-else
-    # Any other
-    fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
+CUR_DIR=$(pwd)
 
-fi
+case $SIMULATOR in
+    modelsim-gui)
+        SIMULATOR=modelsim # Cheap but easy
+        fusesoc --cores-root=fusesoc sim --build-only --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
+        cd build/${TARGET_SYS}_0/sim-modelsim
+        vsim -do fusesoc_run.tcl 
+        ;;
 
-if [ ! "$SIMULATOR" == "verilator" ] && [ "$LOG_RESULT" == "true" ]; then
+    verilator)
+        # NOTE: Workaround for fuseoc not passing vlogdefines to verilog
+        fusesoc --cores-root=fusesoc sim --build-only --sim=$SIMULATOR $TARGET_SYS $EXTRA_ARGS
+        cd build/${TARGET_SYS}_0/sim-verilator
+        ./Vorpsoc_top --elf-load $ELF_FILE 
+        ;;
+
+    *)
+        fusesoc --cores-root=fusesoc sim --sim=$SIMULATOR $TARGET_SYS --elf-load $ELF_FILE $EXTRA_ARGS
+        ;;
+esac
+
+cd $CUR_DIR
+
+if [ "$LOG_RESULT" == "true" ]; then
     # Move generated output to output folder
     RES_DIR=build/${TARGET_SYS}_0/sim-${SIMULATOR}
-    OUT_DIR=${OUT_DIR}/${ELF_NAME}
+    OUT_DIR=${OUT_DIR}/${SIMULATOR}_${ELF_NAME}
 
     if [ "$TARGET_NAME" == "ref" ]; then
         FILE_NAME=${TARGET_NAME}_${ELF_NAME}
@@ -122,13 +133,18 @@ if [ ! "$SIMULATOR" == "verilator" ] && [ "$LOG_RESULT" == "true" ]; then
     rm $OUT_EXEC_FILE > /dev/null 2>&1 
     rm $OUT_OUT_FILE > /dev/null 2>&1 
 
-    # Remove useless lines from ex file
-    while read LINE
-    do
-        if [[ $LINE == *"EXECUTED"* ]]; then
-            echo ${LINE#EXECUTED: } | sed 's/: [0-9]* / /' >> $OUT_EXEC_FILE
-        fi
-    done < $RES_EXEC_FILE
+    if [ ! "$SIMULATOR" == "verilator" ]; then
+        # Remove useless lines from ex file
+        while read LINE
+        do
+            if [[ $LINE == *"EXECUTED"* ]]; then
+                echo ${LINE#EXECUTED: } | sed 's/:[ \t]*[0-9a-z]*[ \t]*/ /' >> $OUT_EXEC_FILE
+            fi
+        done < $RES_EXEC_FILE
+    else
+        # Verilator output is formatted by the testbench
+        mv $RES_EXEC_FILE $OUT_EXEC_FILE
+    fi
 
     mv $RES_OUT_FILE $OUT_OUT_FILE
 fi
