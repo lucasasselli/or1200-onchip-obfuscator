@@ -2,15 +2,7 @@
 import argparse
 import logging
 import progressbar
-import bisect
 from core import common
-from core import decoder
-
-
-def binary_search(a, x, lo=0, hi=None):  # can't use a to specify default for hi
-    hi = hi if hi is not None else len(a)  # hi defaults to len(a)
-    pos = bisect.bisect_left(a, x, lo, hi)  # find insertion position
-    return (pos if pos != hi and a[pos] == x else -1)
 
 
 class Trigger():
@@ -21,15 +13,6 @@ class Trigger():
         self.match = 0
         self.dead = False
 
-        # Generate id
-        # self.id = ""
-        # for insn in self.insn_array:
-        #     try:
-        #         index = decoder.get_index(insn)
-        #     except ValueError:
-        #         logging.error("Unable to get index of instruction %s", insn)
-        #         exit(1)
-        #     self.id += str(index).zfill(3)
         self.id = hash(self.insn_set)
 
     def match_up(self):
@@ -53,43 +36,36 @@ class Trigger():
     def __str__(self):
         return " ".join(self.insn_set) + " (" + self.id + ")"
 
+    def __hash__(self):
+        return hash(self.insn_set)
+
 
 class TriggerList():
 
     def __init__(self, length, max_count):
-        self.trigger_array = []
+        self.trigger_array = dict({})
         self.length = length
         self.max_count = max_count
 
     def add(self, insn_array):
         # Search if trigger is present
         new_trigger = Trigger(insn_array)
-        pos = binary_search(self.trigger_array, new_trigger)
-        if pos >= 0:
-            t = self.trigger_array[pos]
+        if new_trigger in self.trigger_array:
+            t = self.trigger_array[new_trigger]
             t.count_up()
-
             if not t.dead and t.count > self.max_count:
                 # Trigger has exceeded max count
                 t.kill()
-                logging.debug("Trigger %s has exceeded maximum count in %d", t.id, self.length)
-            else:
-                logging.debug("Trigger %s was found %d times in %d", t.id, t.count, self.length)
         else:
-            bisect.insort_left(self.trigger_array, new_trigger)
-            logging.debug("New trigger %s added to list %d", new_trigger.id, self.length)
+            self.trigger_array[new_trigger] = new_trigger
 
     def match(self, insn_array):
         # Search if trigger is present
         new_trigger = Trigger(insn_array)
-        pos = binary_search(self.trigger_array, new_trigger)
-        if pos >= 0:
-            t = self.trigger_array[pos]
-            # Ignore dead triggers
+        if new_trigger in self.trigger_array:
+            t = self.trigger_array[new_trigger]
             if not t.dead:
                 t.match_up()
-        else:
-            logging.debug("Trigger %s can't be matched", new_trigger.id)
 
     def purge_dead(self):
         cnt = 0
@@ -98,7 +74,6 @@ class TriggerList():
             if t.dead:
                 cnt += 1
                 inst += t.count
-                self.trigger_array.pop(i)
 
         return cnt, inst
 
@@ -152,16 +127,6 @@ class Matcher():
     def reset(self):
         self.insn_array = self.length * [None]
         self.init_cnt = self.length
-
-
-def checkEOF(f):
-    pos = f.tell()
-    line = f.readline()
-    EOF = False
-    if line == "":
-        EOF = True
-    f.seek(pos)
-    return EOF
 
 
 def get_insn(line):
@@ -234,9 +199,12 @@ def main():
 
     insn_index = 0
     ref_file.seek(0)
-    while not checkEOF(ref_file):
+    while 1:
 
         line = ref_file.readline()
+        if line == "":
+            # file reached EOF
+            break
 
         # Get instruction
         insn = get_insn(line)
@@ -257,6 +225,7 @@ def main():
 
     bar.finish()
 
+    # TODO remove!
     # Purge dead triggers
     dead_cnt = 0
     dead_inst = 0
@@ -277,9 +246,12 @@ def main():
 
     insn_index = 0
     obf_file.seek(0)
-    while not checkEOF(obf_file):
+    while 1:
 
         line = obf_file.readline()
+        if line == "":
+            # file reached EOF
+            break
 
         # Get instruction
         insn = get_insn(line)
