@@ -2,18 +2,35 @@
 import argparse
 import logging
 import progressbar
-
+import bisect
 from core import common
 from core import decoder
+
+
+def binary_search(a, x, lo=0, hi=None):  # can't use a to specify default for hi
+    hi = hi if hi is not None else len(a)  # hi defaults to len(a)
+    pos = bisect.bisect_left(a, x, lo, hi)  # find insertion position
+    return (pos if pos != hi and a[pos] == x else -1)
 
 
 class Trigger():
 
     def __init__(self, insn_array):
-        self.insn_array = list(insn_array)
+        self.insn_set = tuple(insn_array)
         self.count = 1
         self.match = 0
         self.dead = False
+
+        # Generate id
+        # self.id = ""
+        # for insn in self.insn_array:
+        #     try:
+        #         index = decoder.get_index(insn)
+        #     except ValueError:
+        #         logging.error("Unable to get index of instruction %s", insn)
+        #         exit(1)
+        #     self.id += str(index).zfill(3)
+        self.id = hash(self.insn_set)
 
     def match_up(self):
         self.match += 1
@@ -21,22 +38,20 @@ class Trigger():
     def count_up(self):
         self.count += 1
 
-    def size(self):
+    def __len__(self):
         return len(self.insn_array)
 
     def kill(self):
         self.dead = True
 
-    def get_id(self):
-        trigger_id = ""
-        for insn in self.insn_array:
-            try:
-                index = decoder.get_index(insn)
-            except ValueError:
-                logging.error("Unable to get index of instruction %s", insn)
-                exit(1)
-            trigger_id += str(index)
-        return trigger_id
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __str__(self):
+        return " ".join(self.insn_set) + " (" + self.id + ")"
 
 
 class TriggerList():
@@ -47,52 +62,73 @@ class TriggerList():
         self.max_count = max_count
 
     def add(self, insn_array):
-        # Trigger must be added to the rigth list
-        if len(insn_array) != self.length:
-            logging.error("Trigger was added to wrong list!!!")
-            exit()
-
         # Search if trigger is present
-        found = False
-        for t in self.trigger_array:
-            if t.insn_array == insn_array:
-                # Match found
-                found = True
-                # Ignore dead triggers
-                if not t.dead:
-                    t.count_up()
-                    if t.count > self.max_count:
-                        # Trigger has exceeded max count
-                        t.kill()
-                        logging.debug("Trigger %s has exceeded maximum count in %d", t.get_id(), self.length)
-                # End loop
-                break
+        new_trigger = Trigger(insn_array)
+        pos = binary_search(self.trigger_array, new_trigger)
+        if pos >= 0:
+            t = self.trigger_array[pos]
+            t.count_up()
 
-        if not found:
-            # New trigger
-            trigger = Trigger(insn_array)
-            self.trigger_array.append(trigger)
-            logging.debug("New trigger %s added to list %d", trigger.get_id(), self.length)
+            if not t.dead and t.count > self.max_count:
+                # Trigger has exceeded max count
+                t.kill()
+                logging.debug("Trigger %s has exceeded maximum count in %d", t.id, self.length)
+            else:
+                logging.debug("Trigger %s was found %d times in %d", t.id, t.count, self.length)
+        else:
+            bisect.insort_left(self.trigger_array, new_trigger)
+            logging.debug("New trigger %s added to list %d", new_trigger.id, self.length)
 
     def match(self, insn_array):
-        # Trigger must be added to the rigth list
-        if len(insn_array) != self.length:
-            logging.error("Trigger was matched to wrong list!!!")
-            exit()
-
         # Search if trigger is present
-        for t in self.trigger_array:
-            if t.insn_array == insn_array:
-                # Match found
-                if not t.dead:
-                    t.match_up()
-                # End loop
-                break
+        new_trigger = Trigger(insn_array)
+        pos = binary_search(self.trigger_array, new_trigger)
+        if pos >= 0:
+            t = self.trigger_array[pos]
+            # Ignore dead triggers
+            if not t.dead:
+                t.match_up()
+        else:
+            logging.debug("Trigger %s can't be matched", new_trigger.id)
 
     def purge_dead(self):
+        cnt = 0
+        inst = 0
         for i, t in enumerate(self.trigger_array):
             if t.dead:
+                cnt += 1
+                inst += t.count
                 self.trigger_array.pop(i)
+
+        return cnt, inst
+
+    def __len__(self):
+        return len(self.trigger_array)
+
+    def trigger_cnt(self):
+        cnt = 0
+        inst = 0
+        for t in self.trigger_array:
+            if not t.dead:
+                cnt += 1
+                inst += t.count
+        return cnt, inst
+
+    def match_cnt(self):
+        cnt = 0
+        inst = 0
+        for t in self.trigger_array:
+            if t.match > 0 and not t.dead:
+                cnt += 1
+                inst += t.match
+
+        return cnt, inst
+
+    def __str__(self):
+        out = ""
+        for t in self.trigger_array:
+            out += str(t) + '\n'
+        return out
 
 
 class Matcher():
@@ -150,12 +186,8 @@ def main():
     # Logger
     common.init_logger(args.out, debug=args.debug)
 
-    # Create matchers/list
-    matcher_array = []
-    tlist_array = []
-    for i in range(args.min_length, args.max_length):
-        matcher_array.append(Matcher(i))
-        tlist_array.append(TriggerList(i, args.count))
+    min_length = args.min_length
+    max_length = args.max_length + 1
 
     # Read files
     ref_file_path = args.ref
@@ -183,6 +215,17 @@ def main():
     print(obf_insn_cnt, "obfuscated instructions to check")
     obf_file.seek(0)
 
+    # Create matchers/list
+    expected_instances = 0
+    matcher_array = []
+    tlist_array = []
+    for i in range(min_length, max_length):
+        expected_instances += ref_insn_cnt - i - 1
+        matcher_array.append(Matcher(i))
+        tlist_array.append(TriggerList(i, args.count))
+
+    logging.debug("Total expected instances: %d", expected_instances)
+
     # FIND TRIGGERS IN REFERENCE FILE
     print("Finding candidate triggers in reference file...")
 
@@ -190,6 +233,7 @@ def main():
     bar.start()
 
     insn_index = 0
+    ref_file.seek(0)
     while not checkEOF(ref_file):
 
         line = ref_file.readline()
@@ -214,8 +258,12 @@ def main():
     bar.finish()
 
     # Purge dead triggers
+    dead_cnt = 0
+    dead_inst = 0
     for tlist in tlist_array:
-        tlist.purge_dead()
+        cnt, inst = tlist.purge_dead()
+        dead_cnt += cnt
+        dead_inst += inst
 
     # Reset matchers
     for matcher in matcher_array:
@@ -228,6 +276,7 @@ def main():
     bar.start()
 
     insn_index = 0
+    obf_file.seek(0)
     while not checkEOF(obf_file):
 
         line = obf_file.readline()
@@ -260,15 +309,19 @@ def main():
     survivor_cnt = 0
     survivor_inst = 0
     for tlist in tlist_array:
-        for trigger in tlist.trigger_array:
-            candidate_cnt += 1
-            candidate_inst += trigger.count
-            survivor_inst += trigger.match
-            if not trigger.match == 0:
-                survivor_cnt += 1
+        temp_cnt, temp_inst = tlist.trigger_cnt()
+        candidate_cnt += temp_cnt
+        candidate_inst += temp_inst
+        temp_cnt, temp_inst = tlist.match_cnt()
+        survivor_cnt += temp_cnt
+        survivor_inst += temp_inst
 
     # Survival rate
-    survival_rate = float(survivor_inst)/float(candidate_inst)
+    survival_rate = float(survivor_inst) / float(candidate_inst)
+
+    # TODO debug only
+    if not candidate_inst + survivor_inst != expected_instances:
+        logging.error("Reference instances count error!")
 
     # Print stats
     # TODO print configuration for reference
@@ -277,15 +330,14 @@ def main():
     logging.info("Instruction dilation: %f", or_ratio)
     logging.info("Candidate trigger: %d", candidate_cnt)
     logging.info("Candidate instances: %d", candidate_inst)
+    logging.info("Dead triggers: %d", dead_cnt)
+    logging.info("Dead instances: %d", dead_inst)
     logging.info("Survivor triggers: %d", survivor_cnt)
     logging.info("Survivor instances: %d", survivor_inst)
     logging.info("Survival rate: %f", survival_rate)
 
-    ## Print survivors
     # for tlist in tlist_array:
-    #     for trigger in tlist.trigger_array:
-    #         if trigger.match > 0:
-    #             print(trigger.insn_array)
+    #     print(tlist)
 
 
 if __name__ == '__main__':
