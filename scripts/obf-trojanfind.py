@@ -4,6 +4,8 @@ import logging
 import progressbar
 from core import common
 
+SAFE = False
+
 
 class Trigger():
 
@@ -34,7 +36,7 @@ class Trigger():
         return self.id == other.id
 
     def __str__(self):
-        return " ".join(self.insn_set) + " (" + self.id + ")"
+        return "(" + hex(self.id) + ") " + " ".join(self.insn_set) + " [" + str(self.count) + ":" + str(self.match) + "]"
 
     def __hash__(self):
         return hash(self.insn_set)
@@ -52,6 +54,12 @@ class TriggerList():
         new_trigger = Trigger(insn_array)
         if new_trigger in self.trigger_array:
             t = self.trigger_array[new_trigger]
+
+            # Detect collisions
+            if SAFE:
+                if list(t.insn_set) != insn_array:
+                    logging.error("Collision detected!")
+
             t.count_up()
             if not t.dead and t.count > self.max_count:
                 # Trigger has exceeded max count
@@ -64,16 +72,23 @@ class TriggerList():
         new_trigger = Trigger(insn_array)
         if new_trigger in self.trigger_array:
             t = self.trigger_array[new_trigger]
+
+            # Detect collisions
+            if SAFE:
+                if list(t.insn_set) != insn_array:
+                    logging.error("Collision detected!")
+
             if not t.dead:
                 t.match_up()
 
     def purge_dead(self):
         cnt = 0
         inst = 0
-        for i, t in enumerate(self.trigger_array):
-            if t.dead:
+        for key in self.trigger_array.copy():
+            if self.trigger_array[key].dead:
                 cnt += 1
-                inst += t.count
+                inst += self.trigger_array[key].count
+                del self.trigger_array[key]
 
         return cnt, inst
 
@@ -149,7 +164,7 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    common.init_logger(args.out, debug=args.debug)
+    common.init_logger(None, debug=args.debug)
 
     min_length = args.min_length
     max_length = args.max_length + 1
@@ -309,7 +324,12 @@ def main():
     logging.info("Survival rate: %f", survival_rate)
 
     # for tlist in tlist_array:
-    #     print(tlist)
+    #     for i in tlist.trigger_array:
+    #         t = tlist.trigger_array[i]
+    #         if t.match > 0:
+    #             print(t)
+    with open(args.out, "a") as myfile:
+        myfile.write("%s,%s,%s,%s,%s,%s\n" % (ref_insn_cnt, obf_insn_cnt, candidate_cnt, candidate_inst, survivor_cnt, survivor_inst))
 
 
 if __name__ == '__main__':
