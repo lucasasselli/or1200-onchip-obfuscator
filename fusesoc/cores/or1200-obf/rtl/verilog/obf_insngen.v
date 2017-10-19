@@ -29,6 +29,9 @@ output reg [31:0] obf_insn;
 output obf_last;
 output obf_skip;
 
+
+wire ref_void = (ref_insn[31:26] == `OR1200_OR32_NOP) & ref_insn[16]; 
+
 //////////////////////////////////////////////////
 // SUBSTITUTION LUT
 //////////////////////////////////////////////////
@@ -136,7 +139,7 @@ wire [15:0] f_out_I    = sw_cmd[5] ? lut_out_imm : sw_cmd[4]? 16'd0 : f_in_I;
 // Parse substitution command
 always @(*) 
 begin
-    if(obf_en) begin
+    if(obf_en & !ref_void) begin
         // Type-field
         case(sw_type)
            `OBF_INSN_TYPE_N: obf_insn = ref_insn;
@@ -154,7 +157,7 @@ begin
     end
 end
 
-assign obf_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) & obf_en ? sw_cmd[5] : 1'b0;
-assign obf_last = obf_en ? sw_last : 1'd1;
+assign obf_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) & obf_en & !ref_void ? sw_cmd[5] : 1'b0;
+assign obf_last = obf_en & !ref_void ? sw_last : 1'd1;
 
 endmodule

@@ -55,34 +55,19 @@ wire real_id_freeze = id_freeze & !io_stall;
 wire cnt_en = !obf_bypass & !real_id_freeze & !obf_stop;
 
 //////////////////////////////////////////////////
-// KEY GENERATION
+// CONTROL
 //////////////////////////////////////////////////
 
-// TODO: Add key generator
 wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
+wire ctrl_go = cnt_en & obf_last;
 
-reg [`OBF_ENCNT_WIDTH-1:0] obf_encnt_i;
-
-// Obfuscator enable counter
-wire encnt_en = cnt_en & obf_last;
-always @(posedge clk or `OR1200_RST_EVENT rst) 
-begin
-    if (rst == `OR1200_RST_VALUE) begin
-        // Reset
-        obf_encnt_i = 0;
-    end
-    else begin
-        if(encnt_en) begin
-            obf_encnt_i = obf_encnt_i + 1;
-        end
-        else begin
-            obf_encnt_i = obf_encnt_i;
-        end
-    end
-end
-
-wire if_void = (saved_insn[31:26] == `OR1200_OR32_NOP) & saved_insn[16]; 
-assign obf_en = (obf_encnt_i <= `sub_freq) & !if_void ? 1'd1 : 1'd0; // TODO Change as soon an keygen is designed
+obf_ctrl obf_ctrl_i(
+    .clk(clk),
+    .rst(rst),
+    .ctrl_key(ctrl_key),
+    .ctrl_go(ctrl_go),
+    .obf_en(obf_en)
+);
 
 //////////////////////////////////////////////////
 // PSEUDO PROGRAM COUNTER (PPC)
