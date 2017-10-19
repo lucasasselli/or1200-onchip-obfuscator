@@ -5,7 +5,7 @@ import logging
 from operator import itemgetter
 
 from core import decoder
-from core import utils
+from core import common
 
 # Constants
 PATH_INSN = "insn_list"
@@ -30,10 +30,10 @@ def main():
     args = parser.parse_args()
 
     # Logger
-    utils.init_logger(args.out, debug=args.debug)
+    common.init_logger(args.out, debug=args.debug)
 
     # Read files
-    PATH_RES = utils.get_res_path()
+    PATH_RES = common.get_res_path()
 
     insn_file_path = os.path.join(PATH_RES, PATH_INSN)
     insn_list = list_from_file(insn_file_path)
@@ -61,8 +61,8 @@ def main():
                 logging.warning("Unable to decode dummy %s", dummy)
                 continue
 
-            smd = utils.dscore(insn_word, dummy_word, "smd")
-            jaccd = utils.dscore(insn_word, dummy_word, "jaccd")
+            smd = common.dscore(insn_word, dummy_word, "smd")
+            jaccd = common.dscore(insn_word, dummy_word, "jaccd")
 
             dummy_table.append((dummy, dummy_word, smd, jaccd))
 
