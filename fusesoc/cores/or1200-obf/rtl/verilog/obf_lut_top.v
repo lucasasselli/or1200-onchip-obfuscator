@@ -1,3 +1,7 @@
+// synopsys translate_off
+`include "timescale.v"
+// synopsys translate_on
+`include "or1200_defines.v"
 `include "obf_defines.v"
 
 module obf_lut_top(
