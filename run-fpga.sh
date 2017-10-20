@@ -9,7 +9,7 @@ trap finish EXIT
 fusesoc --cores-root=fusesoc pgm de10_lite
 
 # Start openocd
-openocd -f interface/altera-usb-blaster.cfg -f or1k-dev.tcl & < /dev/null
+openocd -f interface/altera-usb-blaster.cfg -f res/or1k-dev.tcl & < /dev/null
 PID_OPENOCD=$!
 
 sleep 2
