@@ -29,14 +29,14 @@ output lut_i;
     begin
         if (rst == `OR1200_RST_VALUE) begin
             // Reset
-            rnd = 0;
+            rnd <= 0;
         end
         else begin
             if(ctrl_go) begin
-                rnd = rnd + 1;
+                rnd <= rnd + 1;
             end
             else begin
-                rnd = rnd;
+                rnd <= rnd;
             end
         end
     end

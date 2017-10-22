@@ -1,6 +1,6 @@
 // Config
-`define OBF_RND8
-`define OBF_CTRL_COUNTER
+// `define OBF_RND8
+// `define OBF_CTRL_COUNTER
 
 // Main
 `define OBF_PPC_WIDTH 4

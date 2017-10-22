@@ -16,7 +16,7 @@ parameter SIZE = 8;
 input clk;
 input rst;
 input en;
-output out;
+output [SIZE-1:0] out;
 
 wire feedback;
 
