@@ -73,6 +73,8 @@ l.srai rD,rA,L
 l.srl rD,rA,rB
 l.srli rD,rA,L
 l.sub rD,rA,rB
+l.sb I(rA),rB
+l.sh I(rA),rB
 l.sw I(rA),rB
 l.sys K
 l.trap K
