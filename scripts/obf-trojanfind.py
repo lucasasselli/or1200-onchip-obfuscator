@@ -323,13 +323,15 @@ def main():
     logging.info("Survivor instances: %d", survivor_inst)
     logging.info("Survival rate: %f", survival_rate)
 
-    # for tlist in tlist_array:
-    #     for i in tlist.trigger_array:
-    #         t = tlist.trigger_array[i]
-    #         if t.match > 0:
-    #             print(t)
-    with open(args.out, "a") as myfile:
-        myfile.write("%s,%s,%s,%s,%s,%s\n" % (ref_insn_cnt, obf_insn_cnt, candidate_cnt, candidate_inst, survivor_cnt, survivor_inst))
+    for tlist in tlist_array:
+        for i in tlist.trigger_array:
+            t = tlist.trigger_array[i]
+            if t.match > 0:
+                print(t)
+
+    if args.out is not None:
+        with open(args.out, "a") as myfile:
+            myfile.write("%s,%s,%s,%s,%s,%s\n" % (ref_insn_cnt, obf_insn_cnt, candidate_cnt, candidate_inst, survivor_cnt, survivor_inst))
 
 
 if __name__ == '__main__':
