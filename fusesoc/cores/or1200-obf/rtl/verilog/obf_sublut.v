@@ -4,28 +4,28 @@
 `include "or1200_defines.v"
 `include "obf_defines.v"
 
-module obf_lut_top(
+module obf_sublut(
     index,
     ppc,
-    key,
+    sel,
     out_sub,
     out_imm
 );
 
-input [`OBF_IGU_WIDTH-1:0] index;
-input [`OBF_PPC_WIDTH-1:0] ppc;
-input [`OBF_KEY_WIDTH-1:0] key;
-output [`OBF_LUT_OUT_WIDTH-1:0] out_sub;
-output [`OBF_LUT_OUT_WIDTH-1:0] out_imm;
+input [`OBF_INDEX_BUS] index;
+input [`OBF_PPC_BUS] ppc;
+input [`LUT_SEL_BUS] sel;
+output [`LUT_OUT_BUS] out_sub;
+output [`LUT_OUT_BUS] out_imm;
 
 //////////////////////////////////////////////////
 // LUT 0
 //////////////////////////////////////////////////
 
-wire [`OBF_LUT_ADDR_WIDTH-1:0] lut0_ptr;
-wire [`OBF_LUT_ADDR_WIDTH-1:0] lut0_addr = lut0_ptr + ppc;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut0_out_sub;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut0_out_imm;
+wire [`LUT_ADDR_BUS] lut0_ptr;
+wire [`LUT_ADDR_BUS] lut0_addr = lut0_ptr + ppc;
+wire [`LUT_OUT_BUS] lut0_out_sub;
+wire [`LUT_OUT_BUS] lut0_out_imm;
 
 obf_pt0 obf_pt0_i(
     index,

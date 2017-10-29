@@ -1,13 +1,3 @@
-/*
-    OBFUSCATED INSTRUCTION GENERATOR
-
-    TODO:
-    - F-type
-    - FI-type
-    - B-type
-    - S-type
-*/
-
 // synopsys translate_off
 `include "timescale.v"
 // synopsys translate_on
@@ -16,21 +6,21 @@
 
 module obf_insngen(
     ref_insn,
-    ppc_i,
-    obf_key,
+    ppc,
+    sel,
     obf_en,
     obf_insn,
     obf_last,
-    obf_skip
+    ppc_skip
 );
 
 input [31:0] ref_insn;
-input [`OBF_PPC_WIDTH-1:0] ppc_i;
-input [`OBF_KEY_WIDTH-1:0] obf_key;
+input [`OBF_PPC_BUS] ppc;
+input [`LUT_SEL_BUS] sel;
 input obf_en;
 output reg [31:0] obf_insn;
 output obf_last;
-output obf_skip;
+output ppc_skip;
 
 
 wire ref_void = (ref_insn[31:26] == `OR1200_OR32_NOP) & ref_insn[16]; 
@@ -39,21 +29,21 @@ wire ref_void = (ref_insn[31:26] == `OR1200_OR32_NOP) & ref_insn[16];
 // SUBSTITUTION LUT
 //////////////////////////////////////////////////
 
-wire [`OBF_IGU_WIDTH-1:0] igu_i;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_sub;
-wire [`OBF_LUT_OUT_WIDTH-1:0] lut_out_imm;
+wire [`OBF_INDEX_BUS] index;
+wire [`LUT_OUT_BUS] lut_out_sub;
+wire [`LUT_OUT_BUS] lut_out_imm;
 
 // Index generator unit
-obf_igu obf_igu_i(
+obf_indexgen obf_indexgen(
     ref_insn,
-    igu_i
+    index
 );
 
 // Substitution LUT
-obf_lut_top obf_lut_top_i(
-    igu_i,
-    ppc_i,
-    obf_key,
+obf_sublut obf_sublut(
+    index,
+    ppc,
+    sel,
     lut_out_sub,
     lut_out_imm
 );
@@ -115,7 +105,7 @@ always @(f_in_opc) begin
 end
 
 // Parse LUT output
-wire [`OBF_INSN_TYPE_WIDTH-1:0] sw_type = lut_out_sub[`OBF_LUT_OUT_WIDTH-1:`OBF_LUT_OUT_WIDTH-`OBF_INSN_TYPE_WIDTH];
+wire [`OBF_INSN_TYPE_WIDTH-1:0] sw_type = lut_out_sub[`LUT_OUT_WIDTH-1:`LUT_OUT_WIDTH-`OBF_INSN_TYPE_WIDTH];
 wire [11:0]                     sw_cmd  = lut_out_sub[12:1];
 wire                            sw_last = lut_out_sub[0];
 
@@ -160,7 +150,7 @@ begin
     end
 end
 
-assign obf_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) & obf_en & !ref_void ? sw_cmd[5] : 1'b0;
+assign ppc_skip = (sw_type == `OBF_INSN_TYPE_I || sw_type == `OBF_INSN_TYPE_M) & obf_en & !ref_void ? sw_cmd[5] : 1'b0;
 assign obf_last = obf_en & !ref_void ? sw_last : 1'd1;
 
 endmodule

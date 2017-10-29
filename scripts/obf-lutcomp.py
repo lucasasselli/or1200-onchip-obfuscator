@@ -420,7 +420,7 @@ def main():
         # Write decoder content
         decoder_body = ""
         for lut_decoder_word in lut_decoder:
-            decoder_body += "\t\t`OBF_IGU_WIDTH'd{:}: addr = `OBF_LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_decoder_word[1])
+            decoder_body += "\t\t`OBF_INDEX_WIDTH'd{:}: addr = `LUT_ADDR_WIDTH'd{:};\n".format(lut_decoder_word[0], lut_decoder_word[1])
         decoder_sub_array = [("%index%", str(lut_index)), ("%body%", decoder_body)]
         write_out_file("obf_pt{:}.v".format(lut_index), "pt_template", decoder_sub_array)
 

@@ -4,12 +4,12 @@
 `include "or1200_defines.v"
 `include "obf_defines.v"
 
-module obf_ctrl(
+module obf_keydec(
     clk,rst,
     ctrl_key,
     ctrl_go,
     obf_en,
-    lut_i
+    lut_sel
 );
 
 input clk;
@@ -17,7 +17,7 @@ input rst;
 input ctrl_key;
 input ctrl_go;
 output obf_en;
-output lut_i;
+output lut_sel;
 
 
 `ifdef OBF_CTRL_COUNTER

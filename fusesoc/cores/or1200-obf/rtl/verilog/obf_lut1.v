@@ -9,11 +9,11 @@ module obf_lut1(
     out_imm
 );
 
-input [`OBF_LUT_ADDR_WIDTH-1:0] addr;
-output [`OBF_LUT_OUT_WIDTH-1:0] out_sub;
-output [`OBF_LUT_OUT_WIDTH-1:0] out_imm;
+input [`LUT_ADDR_BUS] addr;
+output [`LUT_OUT_BUS] out_sub;
+output [`LUT_OUT_BUS] out_imm;
 
-reg [`OBF_LUT_OUT_WIDTH-1:0] lut [0:59];
+reg [`LUT_OUT_BUS] lut [0:59];
 
 initial begin
 	lut[0] = 16'b0000000000000001;

@@ -58,13 +58,11 @@ wire cnt_en = !obf_bypass & !real_id_freeze & !obf_stop;
 // CONTROL
 //////////////////////////////////////////////////
 
-wire [`OBF_KEY_WIDTH-1:0] obf_key = `OBF_KEY_WIDTH'd0;
 wire ctrl_go = cnt_en & obf_last;
 
-obf_ctrl obf_ctrl_i(
+obf_keydec obf_keydec(
     .clk(clk),
     .rst(rst),
-    .ctrl_key(ctrl_key),
     .ctrl_go(ctrl_go),
     .obf_en(obf_en)
 );
@@ -73,7 +71,7 @@ obf_ctrl obf_ctrl_i(
 // PSEUDO PROGRAM COUNTER (PPC)
 //////////////////////////////////////////////////
 
-reg [`OBF_PPC_WIDTH-1:0] ppc_i; // PPC output value
+reg [`OBF_PPC_BUS] ppc_i; // PPC output value
 
 wire ppc_en = cnt_en;
 wire ppc_rst = obf_last | obf_rst;
@@ -149,14 +147,13 @@ end
 
 wire [31:0] obf_insn;
 
-obf_insngen obf_insngen_i(
-    saved_insn,
-    ppc_i,
-    obf_key,
-    obf_en,
-    obf_insn,
-    obf_last,
-    ppc_skip
+obf_insngen obf_insngen(
+    .ref_insn(saved_insn),
+    .ppc(ppc_i),
+    .obf_en(obf_en),
+    .obf_insn(obf_insn),
+    .obf_last(obf_last),
+    .ppc_skip(ppc_skip)
 );
 
 //////////////////////////////////////////////////

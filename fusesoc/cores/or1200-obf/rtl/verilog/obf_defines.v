@@ -4,19 +4,26 @@
 
 // Main
 `define OBF_PPC_WIDTH 4
-`define OBF_CMD_WIDTH 16
-`define OBF_KEY_WIDTH 2
+`define OBF_PPC_BUS 3:0
+
+`define OBF_KEY_WIDTH 32
+`define OBF_KEY_BUS 31:0
 
 // Obfuscator enable counter
 `define OBF_ENCNT_WIDTH 8
 
-// LUT address fields
-`define OBF_IGU_WIDTH 7
-`define OBF_SUB_WIDTH 2 // TODO Better addressing mode
-
 // LUT
-`define OBF_LUT_ADDR_WIDTH 9
-`define OBF_LUT_OUT_WIDTH  16
+`define OBF_INDEX_WIDTH 7
+`define OBF_INDEX_BUS 6:0
+
+`define LUT_ADDR_WIDTH 9
+`define LUT_ADDR_BUS 8:0
+
+`define LUT_OUT_WIDTH  16
+`define LUT_OUT_BUS  15:0
+
+`define LUT_SEL_WIDTH 2
+`define LUT_SEL_BUS 1:0
 
 // Instruction types
 `define OBF_INSN_TYPE_WIDTH 3
