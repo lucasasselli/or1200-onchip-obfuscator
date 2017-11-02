@@ -87,6 +87,7 @@ int main(int argc, char **argv, char **env)
     bool wb_freeze = 0;
     bool except_flushpipe = 0;
     bool ex_dslot = 0;
+    long int clk_cnt = 0;
 
     Verilated::commandArgs(argc, argv);
 
@@ -128,6 +129,8 @@ int main(int argc, char **argv, char **env)
         ex_dslot = top->orpsoc_top->or1200_top0->or1200_cpu->or1200_except->ex_dslot;
 
         if(top->wb_clk_i){
+            // Count clock cycles
+            clk_cnt++;
             if(!wb_freeze){
                 if (((bit_range(insn,31,26) != OR1200_OR32_NOP) | !(insn & (1 << 16))) && !(except_flushpipe && ex_dslot)){
                     decode(insn, disass_insn); 
@@ -135,7 +138,7 @@ int main(int argc, char **argv, char **env)
                 }
             }
             if(insn == (0x15000000 | NOP_PUTC)){
-                printf("%c", r3);
+                /* printf("%c", r3); */
                 fprintf(f_out, "%c", r3);
             }
         }
@@ -149,6 +152,7 @@ int main(int argc, char **argv, char **env)
 
     printf("Simulation ended at PC = %08x (%lu)\n",
             wb_pc, tbUtils->getTime());
+    printf("Total clock cycles = %d", clk_cnt);
 
     fclose(f_exe);
     fclose(f_out);
