@@ -779,201 +779,105 @@ def get_fopc(name):
 
 
 # Index used to LUT addressing and docs
+name_index = {
+    "l.j": 0,
+    "l.jal": 1,
+    "l.bnf": 2,
+    "l.bf": 3,
+    "l.nop": 4,
+    "l.macrc": 5,
+    "l.movhi": 6,
+    "l.sys": 7,
+    "l.trap": 8,
+    "l.msync": 9,
+    "l.psync": 10,
+    "l.csync": 11,
+    "l.rfe": 12,
+    "l.jr": 13,
+    "l.jalr": 14,
+    "l.maci": 15,
+    "l.cust1": 16,
+    "l.cust2": 17,
+    "l.cust3": 18,
+    "l.cust4": 19,
+    "l.ld": 20,
+    "l.lwz": 21,
+    "l.lws": 22,
+    "l.lbz": 23,
+    "l.lbs": 24,
+    "l.lhz": 25,
+    "l.lhs": 26,
+    "l.addi": 27,
+    "l.addic": 28,
+    "l.andi": 29,
+    "l.ori": 30,
+    "l.xori": 31,
+    "l.muli": 32,
+    "l.mfspr": 33,
+    "l.slli": 34,
+    "l.srli": 35,
+    "l.srai": 36,
+    "l.rori": 37,
+    "l.sfeqi": 38,
+    "l.sfnei": 39,
+    "l.sfgtui": 40,
+    "l.sfgeui": 41,
+    "l.sfltui": 42,
+    "l.sfleui": 43,
+    "l.sfgtsi": 44,
+    "l.sfgesi": 45,
+    "l.sfltsi": 46,
+    "l.sflesi": 47,
+    "l.mtspr": 48,
+    "l.mac": 49,
+    "l.macu": 50,
+    "l.msb": 51,
+    "l.msbu": 52,
+    "l.swa": 53,
+    "l.sd": 54,
+    "l.sw": 55,
+    "l.sb": 56,
+    "l.sh": 57,
+    "l.exths": 58,
+    "l.extws": 59,
+    "l.extbs": 60,
+    "l.extwz": 61,
+    "l.exthz": 62,
+    "l.extbz": 63,
+    "l.add": 64,
+    "l.addc": 65,
+    "l.sub": 66,
+    "l.and": 67,
+    "l.or": 68,
+    "l.xor": 69,
+    "l.cmov": 70,
+    "l.ff1": 71,
+    "l.sll": 72,
+    "l.srl": 73,
+    "l.sra": 74,
+    "l.ror": 75,
+    "l.fl1": 76,
+    "l.mul": 77,
+    "l.muld": 78,
+    "l.div": 79,
+    "l.divu": 80,
+    "l.mulu": 81,
+    "l.muldu": 82,
+    "l.sfeq": 83,
+    "l.sfne": 84,
+    "l.sfgtu": 85,
+    "l.sfgeu": 86,
+    "l.sfltu": 87,
+    "l.sfleu": 88,
+    "l.sfgts": 89,
+    "l.sfges": 90,
+    "l.sflts": 91,
+    "l.sfles": 92,
+    "l.cust5": 93,
+    "l.cust6": 94,
+    "l.cust7": 95,
+    "l.cust8": 96}
+
+
 def get_index(name):
-    if name == "l.j":
-        return 0
-    elif name == "l.jal":
-        return 1
-    elif name == "l.bnf":
-        return 2
-    elif name == "l.bf":
-        return 3
-    elif name == "l.nop":
-        return 4
-    elif name == "l.macrc":
-        return 5
-    elif name == "l.movhi":
-        return 6
-    elif name == "l.sys":
-        return 7
-    elif name == "l.trap":
-        return 8
-    elif name == "l.msync":
-        return 9
-    elif name == "l.psync":
-        return 10
-    elif name == "l.csync":
-        return 11
-    elif name == "l.rfe":
-        return 12
-    elif name == "l.jr":
-        return 13
-    elif name == "l.jalr":
-        return 14
-    elif name == "l.maci":
-        return 15
-    elif name == "l.cust1":
-        return 16
-    elif name == "l.cust2":
-        return 17
-    elif name == "l.cust3":
-        return 18
-    elif name == "l.cust4":
-        return 19
-    elif name == "l.ld":
-        return 20
-    elif name == "l.lwz":
-        return 21
-    elif name == "l.lws":
-        return 22
-    elif name == "l.lbz":
-        return 23
-    elif name == "l.lbs":
-        return 24
-    elif name == "l.lhz":
-        return 25
-    elif name == "l.lhs":
-        return 26
-    elif name == "l.addi":
-        return 27
-    elif name == "l.addic":
-        return 28
-    elif name == "l.andi":
-        return 29
-    elif name == "l.ori":
-        return 30
-    elif name == "l.xori":
-        return 31
-    elif name == "l.muli":
-        return 32
-    elif name == "l.mfspr":
-        return 33
-    elif name == "l.slli":
-        return 34
-    elif name == "l.srli":
-        return 35
-    elif name == "l.srai":
-        return 36
-    elif name == "l.rori":
-        return 37
-    elif name == "l.sfeqi":
-        return 38
-    elif name == "l.sfnei":
-        return 39
-    elif name == "l.sfgtui":
-        return 40
-    elif name == "l.sfgeui":
-        return 41
-    elif name == "l.sfltui":
-        return 42
-    elif name == "l.sfleui":
-        return 43
-    elif name == "l.sfgtsi":
-        return 44
-    elif name == "l.sfgesi":
-        return 45
-    elif name == "l.sfltsi":
-        return 46
-    elif name == "l.sflesi":
-        return 47
-    elif name == "l.mtspr":
-        return 48
-    elif name == "l.mac":
-        return 49
-    elif name == "l.macu":
-        return 50
-    elif name == "l.msb":
-        return 51
-    elif name == "l.msbu":
-        return 52
-    elif name == "l.swa":
-        return 53
-    elif name == "l.sd":
-        return 54
-    elif name == "l.sw":
-        return 55
-    elif name == "l.sb":
-        return 56
-    elif name == "l.sh":
-        return 57
-    elif name == "l.exths":
-        return 58
-    elif name == "l.extws":
-        return 59
-    elif name == "l.extbs":
-        return 60
-    elif name == "l.extwz":
-        return 61
-    elif name == "l.exthz":
-        return 62
-    elif name == "l.extbz":
-        return 63
-    elif name == "l.add":
-        return 64
-    elif name == "l.addc":
-        return 65
-    elif name == "l.sub":
-        return 66
-    elif name == "l.and":
-        return 67
-    elif name == "l.or":
-        return 68
-    elif name == "l.xor":
-        return 69
-    elif name == "l.cmov":
-        return 70
-    elif name == "l.ff1":
-        return 71
-    elif name == "l.sll":
-        return 72
-    elif name == "l.srl":
-        return 73
-    elif name == "l.sra":
-        return 74
-    elif name == "l.ror":
-        return 75
-    elif name == "l.fl1":
-        return 76
-    elif name == "l.mul":
-        return 77
-    elif name == "l.muld":
-        return 78
-    elif name == "l.div":
-        return 79
-    elif name == "l.divu":
-        return 80
-    elif name == "l.mulu":
-        return 81
-    elif name == "l.muldu":
-        return 82
-    elif name == "l.sfeq":
-        return 83
-    elif name == "l.sfne":
-        return 84
-    elif name == "l.sfgtu":
-        return 85
-    elif name == "l.sfgeu":
-        return 86
-    elif name == "l.sfltu":
-        return 87
-    elif name == "l.sfleu":
-        return 88
-    elif name == "l.sfgts":
-        return 89
-    elif name == "l.sfges":
-        return 90
-    elif name == "l.sflts":
-        return 91
-    elif name == "l.sfles":
-        return 92
-    elif name == "l.cust5":
-        return 93
-    elif name == "l.cust6":
-        return 94
-    elif name == "l.cust7":
-        return 95
-    elif name == "l.cust8":
-        return 96
-    else:
-        # Unknown instruction
-        raise ValueError
+    return name_index[name]
