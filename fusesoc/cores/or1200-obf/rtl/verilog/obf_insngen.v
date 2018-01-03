@@ -40,7 +40,7 @@ obf_indexgen obf_indexgen(
 );
 
 // Substitution LUT
-obf_sublut obf_sublut(
+obf_sublib obf_sublib(
     index,
     ppc,
     sel,

@@ -4,7 +4,7 @@
 `include "or1200_defines.v"
 `include "obf_defines.v"
 
-module obf_sublut(
+module obf_sublib(
     index,
     ppc,
     sel,

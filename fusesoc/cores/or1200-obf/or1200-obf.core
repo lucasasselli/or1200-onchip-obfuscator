@@ -9,7 +9,7 @@ src_files =
  rtl/verilog/obf_indexgen.v
  rtl/verilog/obf_keydec.v
  rtl/verilog/obf_rndgen.v
- rtl/verilog/obf_sublut.v
+ rtl/verilog/obf_sublib.v
  rtl/verilog/obf_lut0.v
  rtl/verilog/obf_pt0.v
  rtl/verilog/or1200_alu.v

@@ -36,12 +36,12 @@ always @(insn)
                 3'b000 : i = `OBF_INDEX_WIDTH'd7;
                 // l.trap
                 3'b010 : i = `OBF_INDEX_WIDTH'd8;
-                // l.msync
-                3'b100 : i = `OBF_INDEX_WIDTH'd9;
-                // l.csync
-                3'b101 : i = `OBF_INDEX_WIDTH'd10;
-                // l.csync
-                3'b110 : i = `OBF_INDEX_WIDTH'd11;
+                /* // l.msync */
+                /* 3'b100 : i = `OBF_INDEX_WIDTH'd9; */
+                /* // l.csync */
+                /* 3'b101 : i = `OBF_INDEX_WIDTH'd10; */
+                /* // l.csync */
+                /* 3'b110 : i = `OBF_INDEX_WIDTH'd11; */
                 // Default (error)
                 default : i = -'d1;
             endcase
@@ -53,14 +53,14 @@ always @(insn)
         6'b010010 : i = `OBF_INDEX_WIDTH'd14;
         // l.maci
         6'b010011 : i = `OBF_INDEX_WIDTH'd15;
-        // l.cust1
-        6'b011100 : i = `OBF_INDEX_WIDTH'd16;
-        // l.cust2
-        6'b011101 : i = `OBF_INDEX_WIDTH'd17;
-        // l.cust3
-        6'b011110 : i = `OBF_INDEX_WIDTH'd18;
-        // l.cust4
-        6'b011111 : i = `OBF_INDEX_WIDTH'd19;
+        /* // l.cust1 */
+        /* 6'b011100 : i = `OBF_INDEX_WIDTH'd16; */
+        /* // l.cust2 */
+        /* 6'b011101 : i = `OBF_INDEX_WIDTH'd17; */
+        /* // l.cust3 */
+        /* 6'b011110 : i = `OBF_INDEX_WIDTH'd18; */
+        /* // l.cust4 */
+        /* 6'b011111 : i = `OBF_INDEX_WIDTH'd19; */
         // l.ld
         6'b100000 : i = `OBF_INDEX_WIDTH'd20;
         // l.lwz
@@ -140,15 +140,15 @@ always @(insn)
                 4'b0011 : i = `OBF_INDEX_WIDTH'd50;
                 // l.msb
                 4'b0010 : i = `OBF_INDEX_WIDTH'd51;
-                // l.msbu
-                4'b0100 : i = `OBF_INDEX_WIDTH'd52;
+                /* // l.msbu */
+                /* 4'b0100 : i = `OBF_INDEX_WIDTH'd52; */
                 // Default (error)
                 default : i = -'d1;
             endcase
-        // l.swa
-        6'b110011 : i = `OBF_INDEX_WIDTH'd53;
-        // l.sd
-        6'b110100 : i = `OBF_INDEX_WIDTH'd54;
+        /* // l.swa */
+        /* 6'b110011 : i = `OBF_INDEX_WIDTH'd53; */
+        /* // l.sd */
+        /* 6'b110100 : i = `OBF_INDEX_WIDTH'd54; */
         // l.sw
         6'b110101 : i = `OBF_INDEX_WIDTH'd55;
         // l.sb
@@ -198,16 +198,16 @@ always @(insn)
                 8'b01xx1111 : i = `OBF_INDEX_WIDTH'd76;
                 // l.mul
                 8'b11xx0110 : i = `OBF_INDEX_WIDTH'd77;
-                // l.muld
-                8'b11xx0111 : i = `OBF_INDEX_WIDTH'd78;
+                /* // l.muld */
+                /* 8'b11xx0111 : i = `OBF_INDEX_WIDTH'd78; */
                 // l.div 
                 8'b11xx1001 : i = `OBF_INDEX_WIDTH'd79;
                 // l.divu
                 8'b11xx1010 : i = `OBF_INDEX_WIDTH'd80;
                 // l.mulu
                 8'b11xx1011 : i = `OBF_INDEX_WIDTH'd81;
-                // l.muldu
-                8'b11xx1100 : i = `OBF_INDEX_WIDTH'd82;
+                /* // l.muldu */
+                /* 8'b11xx1100 : i = `OBF_INDEX_WIDTH'd82; */
                 // Default (error)
                 default : i = -'d1;
             endcase
@@ -237,14 +237,14 @@ always @(insn)
                 // Default (error)
                 default : i = -'d1;
             endcase
-        // l.cust5
-        6'b111100 : i = `OBF_INDEX_WIDTH'd93;
-        // l.cust6
-        6'b111101 : i = `OBF_INDEX_WIDTH'd94;
-        // l.cust7
-        6'b111110 : i = `OBF_INDEX_WIDTH'd95;
-        // l.cust8
-        6'b111111 : i = `OBF_INDEX_WIDTH'd96;
+        /* // l.cust5 */
+        /* 6'b111100 : i = `OBF_INDEX_WIDTH'd93; */
+        /* // l.cust6 */
+        /* 6'b111101 : i = `OBF_INDEX_WIDTH'd94; */
+        /* // l.cust7 */
+        /* 6'b111110 : i = `OBF_INDEX_WIDTH'd95; */
+        /* // l.cust8 */
+        /* 6'b111111 : i = `OBF_INDEX_WIDTH'd96; */
         // Default (error)
         default : i = -'d1;
     endcase
