@@ -427,7 +427,7 @@ def main():
         # Write lut content
         lut_body = ""
         for lut_word_index, lut_word in enumerate(lut_content):
-            lut_body += "\tlut[{:}] = 16'b{:};\n".format(lut_word_index, lut_word)
+            lut_body += "assign lut[{:}] = 16'b{:};\n".format(lut_word_index, lut_word)
         lut_sub_array = [("%index%", str(lut_index)), ("%lenght%", str(len(lut_content) - 1)), ("%body%", lut_body)]
         write_out_file("obf_lut{:}.v".format(lut_index), "lut_template", lut_sub_array)
 

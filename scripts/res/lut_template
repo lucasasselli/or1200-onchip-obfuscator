@@ -13,11 +13,9 @@ input [`LUT_ADDR_BUS] addr;
 output [`LUT_OUT_BUS] out_sub;
 output [`LUT_OUT_BUS] out_imm;
 
-reg [`LUT_OUT_BUS] lut [0:%lenght%];
+wire [`LUT_OUT_BUS] lut [0:%lenght%];
 
-initial begin
 %body%
-end
 
 assign out_sub = lut[addr];
 assign out_imm = lut[addr+1];
