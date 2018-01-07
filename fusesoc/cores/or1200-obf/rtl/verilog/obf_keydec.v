@@ -48,7 +48,7 @@ output lut_sel;
     obf_rndgen obf_rndgen_i(
         .clk(clk),
         .rst(rst),
-        .en(ctrl_go),
+        .en(go),
         .out(rnd)
     );
 `endif
