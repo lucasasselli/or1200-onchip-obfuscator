@@ -6,16 +6,16 @@
 
 module obf_keydec(
     clk,rst,
-    ctrl_key,
-    ctrl_go,
+    key,
+    go,
     obf_en,
     lut_sel
 );
 
 input clk;
 input rst;
-input ctrl_key;
-input ctrl_go;
+input key;
+input go;
 output obf_en;
 output lut_sel;
 

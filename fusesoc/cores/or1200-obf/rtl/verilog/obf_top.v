@@ -35,11 +35,13 @@ output reg [31:0] io_pc;
 output io_stall;
 output reg io_no_more_dslot;
 
-wire obf_init;
-wire obf_rst;
-wire obf_stop;
-wire obf_last;
-wire obf_en;
+// Status
+wire obf_init; // Obfuscator dispatching first instruction
+wire obf_last; // Obfuscator dispatching last instruction
+
+// Control
+wire obf_rst;  // Obfuscator internal reset
+wire abf;      // After branch fix
 
 // Current IF insn and PC
 wire [31:0] saved_insn;
@@ -51,19 +53,20 @@ wire obf_bypass = obf_init & if_stall;
 // Prevent feedback between io_stall and id_freeze
 wire real_id_freeze = id_freeze & !io_stall;
 
-// Enables counters (ppc and encnt)
-wire cnt_en = !obf_bypass & !real_id_freeze & !obf_stop;
+// Enables counters
+wire cnt_en = !obf_bypass & !real_id_freeze & !abf;
 
 //////////////////////////////////////////////////
 // CONTROL
 //////////////////////////////////////////////////
 
-wire ctrl_go = cnt_en & obf_last;
+wire key_go = cnt_en & obf_last;
+wire obf_en;
 
 obf_keydec obf_keydec(
     .clk(clk),
     .rst(rst),
-    .ctrl_go(ctrl_go),
+    .go(key_go),
     .obf_en(obf_en)
 );
 
@@ -164,8 +167,11 @@ reg purge;
 reg [31:0] io_insn_reg;
 wire io_void = (io_insn_reg[31:26] == `OR1200_OR32_NOP) & io_insn_reg[16]; 
 
-// Prevents fecth module from fetching old instruction
-assign obf_stop = io_no_more_dslot & if_stall;
+// After Branch Fix (ABF)
+// If a branch is take while the fetch stall is stalling, the wrong instruction
+// is fetched before the correct one is retrieved. In that case the obfuscator waits
+// the next fetched instruction.
+assign abf = io_no_more_dslot & if_stall;
 
 always @(*) begin
     if(ex_branch_taken) begin
@@ -204,10 +210,11 @@ end
 reg obf_flushable;
 reg io_stall_reg;
 
-assign obf_rst = (purge & obf_flushable) | id_flushpipe;
+// Internal reset: issued when instruction after the branch dslot is in the obfuscator
+assign obf_rst = (purge & obf_flushable);
 
 assign io_insn = obf_rst ? {`OR1200_OR32_NOP, 26'h041_0000} : io_insn_reg;
-assign io_stall = obf_stop ? 1'b1 : io_stall_reg;
+assign io_stall = abf ? 1'b1 : io_stall_reg;
 
 // Stall request
 always @(*) 
@@ -222,8 +229,8 @@ begin
             if_stall_req <= 1'b0;
         end
         else begin
-            if (obf_bypass | obf_rst)
-                // Obfuscator disabled or if stage stalling
+            if (obf_rst)
+                // Internal reset
                 if_stall_req <= real_id_freeze;
             else
                 // Obfuscator running
@@ -252,16 +259,8 @@ begin
 
             obf_flushable <= 1'b1;
         end
-        else if (real_id_freeze) begin
-            // ID stage frozen
-            io_insn_reg <= io_insn;
-            io_pc <= io_pc;
-            io_stall_reg <= 1'b0;
-
-            obf_flushable <= obf_flushable;
-        end
-        else if (obf_stop) begin
-            // Allows new instruction to be fetched after branch
+        else if (real_id_freeze | abf) begin
+            // ID stage frozen or ABF
             io_insn_reg <= io_insn;
             io_pc <= io_pc;
             io_stall_reg <= 1'b0;
@@ -270,7 +269,7 @@ begin
         end
         else if (obf_bypass) begin
             // IF stage stalling
-            io_insn_reg <= if_insn;
+            io_insn_reg <= {`OR1200_OR32_NOP, 26'h041_0000};
             io_pc <= if_pc;
             io_stall_reg <= 1'b1;
 
