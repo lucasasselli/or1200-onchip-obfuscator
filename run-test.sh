@@ -24,7 +24,8 @@ REF_LENGTH=$(get_lines out/${SIMULATOR}_${ELF_NAME}/ref_${ELF_NAME}.exec)
 
 # Run obfuscator
 j=0
-for i in {0..255..5}; do
+# for i in {0..255..5}; do
+for i in 255; do
     echo "--------------------------------------------------"
     echo "                    Test $i"
     echo "--------------------------------------------------"
